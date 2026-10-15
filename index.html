@@ -89,6 +89,7 @@ L.control.zoom({position:"bottomright"}).addTo(map);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
 const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,opacity:.85,attribution:"Esri World Imagery"});
 const marker=L.marker([S.lat,S.lon]).addTo(map);
+map.whenReady(()=>setTimeout(()=>map.invalidateSize(),100));
 let selectedMarker=null;
 const toast=m=>{let t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2800)};
 const get=async u=>{let r=await fetch(u,{cache:"no-store"});if(!r.ok)throw Error(r.status);return r.json()};
@@ -174,40 +175,65 @@ async function loadRadar(){
   const d=await get("https://api.rainviewer.com/public/weather-maps.json");
   S.host=d.host;
   const past=d.radar?.past||[];
-  const nowcast=[]; // public API currently provides past radar frames only
-  S.frames=past;
+  const nowcast=d.radar?.nowcast||[];
+  S.frames=[...past,...nowcast];
   if(!S.frames.length)throw Error("empty radar");
   $("#slider").max=Math.max(0,S.frames.length-1);
   S.idx=S.frames.length-1;
   $("#slider").value=S.idx;
   renderRadar();
-  $("#rstatus").textContent=`${past.length} historických snímků`;
-  $("#rstatus").title="RainViewer public API: historické radarové snímky.";
+  $("#rstatus").textContent=nowcast.length?`${past.length} minulých · ${nowcast.length} predikčních`: `${past.length} historických snímků`;
+  $("#rstatus").title=nowcast.length?"Provider vrátil predikční snímky.":"K dispozici je pouze historie; žádný nowcast nebyl vrácen.";
  }catch(e){
   console.error(e);toast("Radar není dostupný.");
   $("#rstatus").textContent="Radar offline";
  }
 }
-function renderRadar(){
- if(!S.frames.length)return;
- const f=S.frames[S.idx];
- if(S.overlay){map.removeLayer(S.overlay);S.overlay=null}
- const url=`${S.host}${f.path}/512/{z}/{x}/{y}/2/1_0.png`;
- S.overlay=L.tileLayer(url,{
-   opacity:S.opacity,
-   tileSize:512,
-   zoomOffset:-1,
-   minZoom:0,
-   maxNativeZoom:8,
-   maxZoom:19,
-   updateWhenZooming:false,
-   updateWhenIdle:true,
-   keepBuffer:4,
-   noWrap:false,
-   attribution:"Weather data by RainViewer"
- }).addTo(map);
- $("#rtime").textContent=new Date(f.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+function radarTileUrl(path){
+  return `${S.host}${path}/256/{z}/{x}/{y}/2/1_0.png`;
 }
+
+function renderRadar(){
+  if(!S.frames.length)return;
+  const f=S.frames[S.idx];
+
+  if(S.overlay){
+    map.removeLayer(S.overlay);
+    S.overlay=null;
+  }
+
+  S.overlay=L.tileLayer(radarTileUrl(f.path),{
+    tileSize:256,
+    minZoom:0,
+    maxNativeZoom:7,
+    maxZoom:19,
+    opacity:S.opacity,
+    updateWhenZooming:false,
+    updateWhenIdle:true,
+    keepBuffer:8,
+    unloadInvisibleTiles:true,
+    reuseTiles:true,
+    noWrap:false,
+    crossOrigin:true,
+    zIndex:20,
+    attribution:"Weather data by RainViewer"
+  });
+
+  S.overlay.addTo(map);
+
+  $("#rtime").textContent=new Date(f.time*1000).toLocaleTimeString("cs-CZ",{
+    hour:"2-digit",minute:"2-digit"
+  });
+}
+
+// Leaflet should own the tile positioning. We only ask the existing layer
+// to refresh once the map has settled, never during the zoom animation.
+map.on("zoomend moveend",()=>{
+  if(S.overlay){
+    S.overlay.setUrl(radarTileUrl(S.frames[S.idx].path), false);
+    S.overlay.redraw();
+  }
+});
 $("#slider").oninput=e=>{S.idx=+e.target.value;renderRadar()};
 $("#play").onclick=()=>{S.playing=!S.playing;$("#play").textContent=S.playing?"❚❚":"▶";if(S.playing)tick();else clearTimeout(S.timer)};
 function tick(){if(!S.playing)return;S.idx=(S.idx+1)%S.frames.length;$("#slider").value=S.idx;renderRadar();S.timer=setTimeout(tick,S.speed)}
@@ -239,7 +265,7 @@ document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");
  const v=b.dataset.v;
  if(v==="sat"){if(!map.hasLayer(sat))sat.addTo(map);toast("Satelitní podklad zapnut.")}
- else if(v==="radar"){if(S.overlay&&!map.hasLayer(S.overlay))S.overlay.addTo(map);toast("Radar zapnut.")}
+ else if(v==="radar"){if(S.overlay&&!map.hasLayer(S.overlay))S.overlay.addTo(map);if(S.overlay)S.overlay.bringToFront();toast("Radar zapnut.")}
  else if(v==="light"){toast("Blesková aktivita je modelový indikátor Open-Meteo, nikoli přesná detekce jednotlivých úderů.")}
  else if(v==="wind"){toast("Vítr: rychlost a nárazy jsou dostupné v panelu; plošná globální tile vrstva vyžaduje další veřejný provider.")}
  else if(v==="cloud"){toast("Oblačnost je dostupná z modelu; plošná globální tile vrstva bude doplněna pouze s ověřeným veřejným zdrojem.")}
