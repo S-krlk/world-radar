@@ -174,15 +174,15 @@ async function loadRadar(){
   const d=await get("https://api.rainviewer.com/public/weather-maps.json");
   S.host=d.host;
   const past=d.radar?.past||[];
-  const nowcast=d.radar?.nowcast||[];
-  S.frames=[...past,...nowcast];
+  const nowcast=[]; // public API currently provides past radar frames only
+  S.frames=past;
   if(!S.frames.length)throw Error("empty radar");
   $("#slider").max=Math.max(0,S.frames.length-1);
   S.idx=S.frames.length-1;
   $("#slider").value=S.idx;
   renderRadar();
-  $("#rstatus").textContent=nowcast.length?`${past.length} minulých · ${nowcast.length} predikčních`: `${past.length} historických snímků`;
-  $("#rstatus").title=nowcast.length?"Provider vrátil predikční snímky.":"K dispozici je pouze historie; žádný nowcast nebyl vrácen.";
+  $("#rstatus").textContent=`${past.length} historických snímků`;
+  $("#rstatus").title="RainViewer public API: historické radarové snímky.";
  }catch(e){
   console.error(e);toast("Radar není dostupný.");
   $("#rstatus").textContent="Radar offline";
@@ -196,17 +196,18 @@ function renderRadar(){
  S.overlay=L.tileLayer(url,{
    opacity:S.opacity,
    tileSize:512,
-   maxNativeZoom:7,
-   maxZoom:19,
+   zoomOffset:-1,
    minZoom:0,
+   maxNativeZoom:8,
+   maxZoom:19,
    updateWhenZooming:false,
    updateWhenIdle:true,
-   keepBuffer:6,
+   keepBuffer:4,
+   noWrap:false,
    attribution:"Weather data by RainViewer"
  }).addTo(map);
  $("#rtime").textContent=new Date(f.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
 }
-map.on("zoomend moveend",()=>{ if(S.overlay)S.overlay.redraw(); });
 $("#slider").oninput=e=>{S.idx=+e.target.value;renderRadar()};
 $("#play").onclick=()=>{S.playing=!S.playing;$("#play").textContent=S.playing?"❚❚":"▶";if(S.playing)tick();else clearTimeout(S.timer)};
 function tick(){if(!S.playing)return;S.idx=(S.idx+1)%S.frames.length;$("#slider").value=S.idx;renderRadar();S.timer=setTimeout(tick,S.speed)}
