@@ -2,31 +2,120 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#071522">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="World Radar">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
 <title>World Radar</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#06111d;--panel:#081522ee;--line:#294052;--muted:#9db0bf;--accent:#49aef1}
-*{box-sizing:border-box}html,body,#map{height:100%;margin:0}
-body{background:var(--bg);color:#eef7ff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
-#map{position:fixed;inset:0}.ui{position:fixed;z-index:1000;inset:14px 14px auto;pointer-events:none}
-.search{display:flex;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:9px;box-shadow:0 8px 30px #0008;pointer-events:auto}
-.search input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:#fff;font-size:17px;padding:8px}.btn{border:0;border-radius:15px;background:#122536;color:#fff;min-width:48px;height:44px;font-size:19px}.btn.primary{background:var(--accent)}
-.tabs{position:fixed;z-index:1001;left:14px;top:92px;display:flex;flex-direction:column;gap:4px;background:var(--panel);padding:7px;border:1px solid var(--line);border-radius:19px;box-shadow:0 8px 30px #0008}
-.tab{border:0;background:transparent;color:#fff;font-size:23px;padding:8px;border-radius:13px}.tab.active{background:#19364a}
-.panel{position:fixed;z-index:1000;left:14px;right:14px;bottom:14px;display:grid;gap:9px;pointer-events:none;max-height:57vh;overflow:auto}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:14px;box-shadow:0 8px 35px #0009;pointer-events:auto;backdrop-filter:blur(8px)}
-.topcard{display:grid;grid-template-columns:1fr 1fr;gap:9px}.temp{font-size:47px;font-weight:800;letter-spacing:-2px}.muted{color:var(--muted)}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.metric{background:#102232;border-radius:13px;padding:9px}.metric small{display:block;color:#8fa6b8;margin-bottom:3px}.metric b{font-size:15px}
-.storm{border-color:#6a3241}.timeline{display:flex;align-items:center;gap:9px}.timeline input{flex:1}.timeline-title{display:flex;justify-content:space-between;gap:10px}
-.forecast{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.hour{background:#102232;border-radius:13px;padding:8px;text-align:center}.hour b{display:block;margin:4px 0}.hour small{color:var(--muted)}
-.toast{position:fixed;z-index:2000;top:78px;left:50%;transform:translateX(-50%);background:#091827f5;border:1px solid var(--line);padding:11px 16px;border-radius:14px;opacity:0;transition:.2s;pointer-events:none}.toast.show{opacity:1}
-.leaflet-control-attribution{background:#081522cc!important;color:#b8c7d2!important}.leaflet-control-attribution a{color:#7dc9ff!important}
-@media(max-width:700px){
- .tabs{top:92px}.panel{bottom:9px;max-height:53vh}.topcard{grid-template-columns:1fr}
- .metrics{grid-template-columns:repeat(3,1fr)}.metric{padding:7px}.metric b{font-size:13px}.forecast{grid-template-columns:repeat(3,1fr)}
+:root{color-scheme:dark;--bg:#06111d;--panel:rgba(7,20,33,.94);--line:rgba(150,190,220,.19);--muted:#9db0bf;--accent:#49aef1;--safe-bottom:env(safe-area-inset-bottom,0px);--safe-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body,#map{width:100%;height:100%;height:100dvh;margin:0}
+body{background:var(--bg);color:#eef7ff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;overflow:hidden;overscroll-behavior:none}
+button,input,select{font:inherit}
+button{cursor:pointer;touch-action:manipulation}
+#map{position:fixed;inset:0;z-index:0;background:#102131}
+.leaflet-container{background:#102131}
+.ui{position:fixed;z-index:1200;top:calc(var(--safe-top) + 10px);left:10px;right:10px;pointer-events:none}
+.search{display:flex;align-items:center;gap:6px;min-height:60px;padding:7px;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:0 8px 28px #0006;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);pointer-events:auto}
+.search input{flex:1;min-width:0;width:0;height:44px;padding:0 10px;color:#fff;background:transparent;border:0;outline:none;font-size:16px}
+.search input::placeholder{color:#9db0bf}
+.btn{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;padding:0;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:#122536;color:#fff;font-size:19px}
+.btn.primary{background:var(--accent);color:#06111d;border-color:transparent}
+.btn:active,.tab:active{transform:scale(.96)}
+.tabs{position:fixed;z-index:1100;left:10px;top:calc(var(--safe-top) + 82px);display:flex;flex-direction:column;gap:4px;padding:6px;background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px #0006;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.tab{display:flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:0;border-radius:12px;background:transparent;color:#fff;font-size:21px}
+.tab.active{background:#19364a;box-shadow:inset 0 0 0 1px rgba(73,174,241,.28)}
+.panel{position:fixed;z-index:1000;left:auto;right:10px;top:calc(var(--safe-top) + 82px);bottom:92px;width:min(360px,calc(100vw - 78px));display:grid;align-content:start;gap:9px;overflow:auto;overscroll-behavior:contain;padding:0 1px 4px;scrollbar-width:thin;scrollbar-color:#ffffff20 transparent}
+.topcard{display:grid;grid-template-columns:1fr;gap:9px}
+.card{min-width:0;padding:13px;border-radius:20px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 30px #0006;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.card-head .muted{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#panelToggle{display:none;flex:0 0 auto;border:1px solid var(--line);background:#ffffff0d;color:#dcebf5;border-radius:10px;padding:5px 9px;font-size:12px}
+.temp{font-size:46px;line-height:1.05;font-weight:800;letter-spacing:-2px}
+.muted{color:var(--muted);font-size:11px}
+#description{font-size:13px;margin-top:3px}
+#updated{margin-top:4px;font-size:10px!important}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
+.metric{min-width:0;overflow:hidden;background:#102232;border:1px solid rgba(255,255,255,.025);border-radius:12px;padding:8px}
+.metric small{display:block;color:#8fa6b8;margin-bottom:4px;font-size:10px;line-height:1.25}
+.metric b{display:block;font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+.storm{border-color:#6a324155}
+.storm p,#nowcastText{font-size:12px;line-height:1.45;margin:9px 0}
+#stormLevel{font-weight:800}
+.timeline{position:fixed;z-index:1250;left:64px;right:10px;bottom:calc(var(--safe-bottom) + 10px);padding:10px 12px;border-radius:17px;background:var(--panel);border:1px solid var(--line);box-shadow:0 8px 28px #0007;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.timeline-title{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px}
+.timeline-row{display:flex;align-items:center;gap:9px;margin-top:5px}
+.timeline-row .btn{flex-basis:35px;width:35px;height:32px;border-radius:10px;font-size:14px}
+.timeline input{flex:1;min-width:0;width:0;accent-color:var(--accent)}
+#radarStatus{font-size:9px;line-height:1.3;margin-top:4px;color:var(--muted)}
+.forecast{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.hour{min-width:0;background:#102232;border-radius:12px;padding:8px 5px;text-align:center;font-size:10px}
+.hour b{display:block;margin:4px 0;font-size:14px}
+.hour small{color:var(--muted);font-size:9px}
+.toast{position:fixed;z-index:3000;top:calc(var(--safe-top) + 78px);left:50%;max-width:calc(100vw - 36px);transform:translateX(-50%);background:#091827f7;border:1px solid var(--line);padding:11px 15px;border-radius:13px;opacity:0;transition:opacity .18s;pointer-events:none;text-align:center;font-size:12px;box-shadow:0 8px 28px #0008}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;z-index:4000;display:grid;place-items:center;background:#0009;padding:20px}
+.modal.hidden{display:none}
+.modalbox{width:min(430px,100%);padding:18px;border-radius:20px;background:#081522f7;border:1px solid var(--line);box-shadow:0 12px 40px #0009}
+.modalbox h2{margin:0 0 12px;font-size:20px}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font-size:13px}
+.settings-row input[type=range]{max-width:48%;accent-color:var(--accent)}
+.settings-row select{color:#fff;background:#102232;border:1px solid var(--line);border-radius:9px;padding:7px}
+.close{float:right;border:1px solid var(--line);background:#ffffff0d;color:#fff;border-radius:10px;padding:5px 11px;font-size:18px}
+.leaflet-control-attribution{max-width:70vw;background:#081522cc!important;color:#b8c7d2!important;font-size:8px!important}
+.leaflet-control-attribution a{color:#7dc9ff!important}
+.leaflet-control-zoom a{background:#081522ee!important;color:#fff!important;border-color:var(--line)!important}
+@media (max-width:800px){
+  .ui{left:8px;right:8px;top:calc(var(--safe-top) + 8px)}
+  .search{min-height:54px;padding:5px;gap:5px;border-radius:18px}
+  .search input{height:42px;font-size:16px;padding:0 8px}
+  .btn{flex-basis:42px;width:42px;height:42px;border-radius:13px}
+  .tabs{left:8px;top:calc(var(--safe-top) + 72px);gap:3px;padding:4px;border-radius:16px}
+  .tab{width:38px;height:38px;font-size:19px;border-radius:11px}
+  .panel{left:56px;right:8px;top:auto;bottom:calc(var(--safe-bottom) + 91px);width:auto;max-height:33dvh;gap:7px;overflow:auto;padding-bottom:3px;transition:max-height .2s ease}
+  .panel.expanded{max-height:min(66dvh,760px)}
+  #panelToggle{display:inline-flex;align-items:center;justify-content:center}
+  .panel:not(.expanded) .storm,.panel:not(.expanded) .extra-card{display:none}
+  .topcard{grid-template-columns:1fr;gap:7px}
+  .card{padding:10px;border-radius:18px}
+  .weather-card{padding:11px}
+  .temp{font-size:39px;letter-spacing:-1.5px}
+  .metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-top:7px}
+  .metric{padding:7px;border-radius:10px}
+  .metric small{font-size:9px;margin-bottom:3px}
+  .metric b{font-size:12px}
+  .timeline{left:56px;right:8px;bottom:calc(var(--safe-bottom) + 8px);padding:8px 10px;border-radius:15px}
+  .timeline-title{font-size:10px}
+  .timeline-row{gap:7px;margin-top:3px}
+  #radarStatus{font-size:8px}
+  .forecast{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .hour{padding:7px 4px}
+  .leaflet-bottom.leaflet-right{bottom:92px}
+  .leaflet-bottom.leaflet-left{bottom:76px}
 }
+@media (max-width:380px){
+  .search{gap:4px}.btn{flex-basis:38px;width:38px;height:40px;font-size:17px}
+  .search input{font-size:15px;padding:0 5px}
+  .panel{left:53px;right:6px}
+  .tabs{left:6px}
+  .tab{width:36px;height:36px}
+  .timeline{left:53px;right:6px}
+  .metric{padding:6px 5px}.metric b{font-size:11px}
+}
+@media (min-width:801px){
+ .ui{top:12px;left:12px;right:12px;max-width:590px}
+ .search{border-radius:17px}
+ .tabs{top:82px;left:12px}
+ .panel{top:82px;right:12px;bottom:100px;width:350px;max-height:none}
+ .timeline{left:72px;right:380px;bottom:14px}
+ .forecast{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
@@ -36,20 +125,21 @@ body{background:var(--bg);color:#eef7ff;font-family:-apple-system,BlinkMacSystem
 <button class="btn primary" aria-label="Hledat">⌕</button>
 <button type="button" id="locate" class="btn" aria-label="Moje poloha">⊙</button>
 <button type="button" id="refresh" class="btn" aria-label="Obnovit">↻</button>
+<button type="button" id="settings" class="btn" aria-label="Nastavení">⚙</button>
 </form></div>
 
 <div class="tabs" aria-label="Map layers">
-<button class="tab active" data-layer="radar" title="Radar">🌧️</button>
+<button class="tab active" data-layer="radar" title="Radarová mapa">🌧️</button>
 <button class="tab" data-layer="sat" title="Satelit">🛰️</button>
-<button class="tab" data-layer="cloud" title="Oblačnost">☁️</button>
-<button class="tab" data-layer="lightning" title="Blesky">⚡</button>
-<button class="tab" data-layer="wind" title="Vítr">💨</button>
+<button class="tab" data-layer="cloud" title="Oblačnost v datovém panelu">☁️</button>
+<button class="tab" data-layer="lightning" title="Bouřková data">⚡</button>
+<button class="tab" data-layer="wind" title="Vítr v datovém panelu">💨</button>
 </div>
 
 <div class="panel">
 <div class="topcard">
-<section class="card">
-<div class="muted">TEĎ · <b id="place">Olomouc</b></div>
+<section class="card weather-card">
+<div class="card-head"><div class="muted">TEĎ · <b id="place">Olomouc</b></div><button id="panelToggle" type="button" aria-expanded="false">Více⌄</button></div>
 <div><span id="temp" class="temp">--°</span> <span id="weatherIcon">☁️</span></div>
 <div id="description" class="muted">Načítám počasí…</div>
 <div id="updated" class="muted" style="margin-top:4px;font-size:12px">--</div>
@@ -80,22 +170,15 @@ body{background:var(--bg);color:#eef7ff;font-family:-apple-system,BlinkMacSystem
 </section>
 </div>
 
-<section class="card">
-<div class="timeline-title"><b>RADAR TIMELINE</b><span id="radarTime" class="muted">--:--</span></div>
-<div class="timeline" style="margin-top:8px">
-<button id="play" class="btn">▶</button>
-<input id="radarSlider" type="range" min="0" max="0" value="0">
-</div>
-<div id="radarStatus" class="muted" style="margin-top:7px">Načítám radar…</div>
-</section>
 
-<section class="card">
+
+<section class="card extra-card">
 <div class="muted">🔮 NOWCAST</div>
 <p id="nowcastText">Načítám krátkodobý výhled…</p>
 <div class="muted" id="nowcastDetail">Radar a model se načítají samostatně.</div>
 </section>
 
-<section class="card">
+<section class="card extra-card">
 <div class="muted" style="margin-bottom:8px">🕐 HOURLY FORECAST</div>
 <div id="forecast" class="forecast"></div>
 </section>
@@ -103,12 +186,29 @@ body{background:var(--bg);color:#eef7ff;font-family:-apple-system,BlinkMacSystem
 
 <div id="toast" class="toast"></div>
 
+<section class="timeline" aria-label="Radar timeline">
+ <div class="timeline-title"><b>RADAR TIMELINE</b><span id="radarTime" class="muted">--:--</span></div>
+ <div class="timeline-row"><button id="play" class="btn" aria-label="Přehrát radar">▶</button><input id="radarSlider" type="range" min="0" max="0" value="0" aria-label="Čas radarového snímku"></div>
+ <div id="radarStatus" class="muted">Načítám radar…</div>
+</section>
+<div class="modal hidden" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+ <div class="modalbox">
+  <button class="close" id="closeSettings" type="button" aria-label="Zavřít">×</button>
+  <h2 id="settingsTitle">Nastavení radaru</h2>
+  <div class="settings-row"><span>Průhlednost radaru</span><input id="opacity" type="range" min=".2" max="1" step=".05" value=".72"></div>
+  <div class="settings-row"><span>Rychlost animace</span><select id="speed"><option value="600">Rychlá</option><option value="950" selected>Normální</option><option value="1600">Pomalá</option></select></div>
+  <div class="settings-row"><span>Automaticky aktualizovat</span><input id="autoRefresh" type="checkbox" checked></div>
+  <p class="muted">Radar zobrazuje dostupné historické snímky. Krátkodobý výhled počasí je samostatná modelová předpověď.</p>
+ </div>
+</div>
+
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const state={
  lat:49.5938,lon:17.2509,place:"Olomouc",frames:[],index:0,radar:null,
- opacity:.72,playing:false,timer:null,speed:950,auto:true,lastWeather:null
+ opacity:.72,playing:false,timer:null,speed:950,auto:true,lastWeather:null,activeLayer:"radar"
 };
 
 const map=L.map("map",{
@@ -161,21 +261,33 @@ function radarUrl(frame){
 function renderRadar(){
  if(!state.frames.length)return;
  const frame=state.frames[state.index];
- if(state.radar)map.removeLayer(state.radar);
- state.radar=L.tileLayer(radarUrl(frame),{
-  tileSize:256,minZoom:0,maxNativeZoom:7,maxZoom:19,opacity:state.opacity,
-  updateWhenZooming:true,updateWhenIdle:true,keepBuffer:8,noWrap:false,
-  zIndex:30,detectRetina:true,attribution:"Weather data by RainViewer"
- }).addTo(map);
- $("#radarTime").textContent=new Date(frame.time*1000)
-   .toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+ const url=radarUrl(frame);
+
+ /* Keep one Leaflet tile layer alive across animation frames. This avoids
+    repeated layer teardown, visual jumps and unnecessary map re-layouts. */
+ if(!state.radar){
+  state.radar=L.tileLayer(url,{
+   tileSize:256,minZoom:0,maxNativeZoom:7,maxZoom:19,opacity:state.opacity,
+   updateWhenZooming:false,updateWhenIdle:true,keepBuffer:5,noWrap:false,
+   zIndex:30,attribution:"Weather data by RainViewer"
+  });
+ }else if(state.radar._url!==url){
+  state.radar.setUrl(url);
+ }
+ state.radar.setOpacity(state.opacity);
+
+ if(state.activeLayer==="radar"&&!map.hasLayer(state.radar))state.radar.addTo(map);
+ if(state.activeLayer!=="radar"&&map.hasLayer(state.radar))map.removeLayer(state.radar);
+
+ $("#radarTime").textContent=String(new Date(frame.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"}));
 }
 async function loadRadar(){
  try{
   const d=await api("https://api.rainviewer.com/public/weather-maps.json");
   const host=d.host||"https://tilecache.rainviewer.com";
+  const oldCount=state.frames.length,oldIndex=state.index;
   state.frames=(d.radar?.past||[]).map(x=>({...x,host}));
-  state.index=Math.max(0,state.frames.length-1);
+  state.index=oldCount?Math.min(oldIndex,Math.max(0,state.frames.length-1)):Math.max(0,state.frames.length-1);
   $("#radarSlider").max=Math.max(0,state.frames.length-1);
   $("#radarSlider").value=state.index;
   $("#radarStatus").textContent=`${state.frames.length} historických snímků`;
@@ -187,20 +299,26 @@ async function loadRadar(){
  }
 }
 
-function renderForecast(hourly,currentIndex){
+function currentHourIndex(hourlyTimes,currentTime){
+ if(!Array.isArray(hourlyTimes)||!hourlyTimes.length)return 0;
+ const key=String(currentTime||"").slice(0,13);
+ const exact=hourlyTimes.findIndex(t=>String(t).slice(0,13)===key);
+ if(exact>=0)return exact;
+ const fallback=hourlyTimes.findIndex(t=>String(t)>=key);
+ return fallback>=0?fallback:0;
+}
+function renderForecast(hourly,startIndex){
  const box=$("#forecast");box.innerHTML="";
  const times=hourly.time||[];
- const step=Math.max(1,currentIndex);
- for(let i=currentIndex;i<Math.min(times.length,currentIndex+6);i+=step){
-  const [ic,desc]=weatherInfo(hourly.weather_code?.[i]);
+ const start=Math.max(0,Math.min(Number(startIndex)||0,times.length-1));
+ for(let i=start;i<Math.min(times.length,start+6);i++){
+  const [icon]=weatherInfo(hourly.weather_code?.[i]);
   const el=document.createElement("div");el.className="hour";
-  el.innerHTML=`<small>${new Date(times[i]).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})}</small>
-   <div>${ic}</div><b>${value(Math.round(hourly.temperature_2m?.[i]),"°")}</b>
-   <small>🌧️ ${value(hourly.precipitation_probability?.[i],"%")}</small>`;
+  const time=String(times[i]||"").slice(11,16)||"--:--";
+  el.innerHTML=`<small>${time}</small><div>${icon}</div><b>${value(Math.round(hourly.temperature_2m?.[i]),"°")}</b><small>🌧️ ${value(hourly.precipitation_probability?.[i],"%")}</small>`;
   box.appendChild(el);
  }
 }
-
 async function loadWeather(){
  const base=`latitude=${state.lat}&longitude=${state.lon}&timezone=auto&forecast_days=2`;
 
@@ -232,10 +350,11 @@ async function loadWeather(){
     ?"N/A":`${(c.visibility/1000).toFixed(1)} km`;
   $("#cloud").textContent=value(Math.round(c.cloud_cover),"%");
   $("#pressure").textContent=value(Math.round(c.surface_pressure)," hPa");
-  $("#updated").textContent=`Open-Meteo · ${new Date(c.time).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})}`;
+  $("#updated").textContent=`Open-Meteo · ${String(c.time).slice(11,16)}`;
 
-  const p0=h.precipitation_probability?.[0]??0;
-  const p3=h.precipitation_probability?.[3]??0;
+  const hourIdx=currentHourIndex(h.time,c.time);
+  const p0=h.precipitation_probability?.[hourIdx]??0;
+  const p3=h.precipitation_probability?.[Math.min(hourIdx+3,(h.precipitation_probability?.length||1)-1)]??0;
   $("#nowcastText").textContent=p0>=70
    ?`Srážky jsou podle modelu velmi pravděpodobné už nyní (${Math.round(p0)} %).`
    :p3>=60
@@ -243,7 +362,7 @@ async function loadWeather(){
    :"V nejbližších hodinách není podle modelu výrazný srážkový signál.";
   $("#nowcastDetail").textContent=
    "Radar ukazuje skutečný pohyb srážek; modelová předpověď je pouze doplňkový výhled.";
-  renderForecast(h,0);
+  renderForecast(h,hourIdx);
  }catch(e){
   console.error("Main weather:",e);
   $("#description").textContent="Základní počasí není momentálně dostupné";
@@ -256,8 +375,9 @@ async function loadWeather(){
   const url=`https://api.open-meteo.com/v1/forecast?${base}`+
    `&hourly=cape,convective_inhibition,lightning_density,precipitation`;
   const d=await api(url),h=d.hourly||{};
-  const cape=h.cape?.[0],cin=h.convective_inhibition?.[0],ld=h.lightning_density?.[0];
-  const rain=h.precipitation?.[0]??0;
+  const sIdx=currentHourIndex(h.time,state.lastWeather?.current?.time);
+  const cape=h.cape?.[sIdx],cin=h.convective_inhibition?.[sIdx],ld=h.lightning_density?.[sIdx];
+  const rain=h.precipitation?.[sIdx]??0;
 
   let score=null;
   if(cape!=null){
@@ -291,24 +411,36 @@ async function loadWeather(){
 }
 
 function setLayer(name){
- document.querySelectorAll(".tab").forEach(b=>
-   b.classList.toggle("active",b.dataset.layer===name));
  if(name==="sat"){
-  if(state.radar)map.removeLayer(state.radar);
-  satellite.addTo(map);notify("Satelitní podklad");
- }else if(name==="radar"){
+  state.activeLayer="sat";
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer===name));
+  if(state.radar&&map.hasLayer(state.radar))map.removeLayer(state.radar);
+  if(!map.hasLayer(satellite))satellite.addTo(map);
+  notify("Satelitní podklad zapnut");
+  return;
+ }
+ if(name==="radar"){
+  state.activeLayer="radar";
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer===name));
   if(map.hasLayer(satellite))map.removeLayer(satellite);
-  if(!state.radar)renderRadar();else state.radar.addTo(map);
+  renderRadar();
   notify("Radar zapnut");
- }else if(name==="cloud"){
-  notify("Oblačnost je dostupná v meteorologickém panelu");
- }else if(name==="lightning"){
-  notify("⚡ Blesky: modelová hustota je v Bouřkovém Engine");
+  return;
+ }
+ // These buttons navigate to the relevant data instead of pretending to be
+ // map overlays when no verified global tile source is configured.
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",false));
+ if(name==="lightning"){
+  $(".storm").scrollIntoView({behavior:"smooth",block:"nearest"});
+  notify("Blesková hustota je modelový údaj, ne přesná poloha úderů.");
  }else if(name==="wind"){
-  notify("💨 Vítr: směr, rychlost a nárazy jsou v panelu");
+  $(".weather-card").scrollIntoView({behavior:"smooth",block:"nearest"});
+  notify("Vítr, směr a nárazy jsou v panelu počasí.");
+ }else if(name==="cloud"){
+  $(".weather-card").scrollIntoView({behavior:"smooth",block:"nearest"});
+  notify("Oblačnost je uvedena v panelu. Skutečný satelitní obraz najdeš pod 🛰️.");
  }
 }
-
 document.querySelectorAll(".tab").forEach(b=>
  b.addEventListener("click",()=>setLayer(b.dataset.layer)));
 
@@ -332,6 +464,28 @@ $("#play").addEventListener("click",()=>{
 
 $("#refresh").addEventListener("click",()=>{
  loadRadar();loadWeather();notify("Obnovuji meteorologická data…");
+});
+$("#settings").addEventListener("click",()=>$("#settingsModal").classList.remove("hidden"));
+$("#closeSettings").addEventListener("click",()=>$("#settingsModal").classList.add("hidden"));
+$("#settingsModal").addEventListener("click",e=>{if(e.target.id==="settingsModal")$("#settingsModal").classList.add("hidden")});
+$("#opacity").addEventListener("input",e=>{state.opacity=Number(e.target.value);if(state.radar)state.radar.setOpacity(state.opacity)});
+$("#speed").addEventListener("change",e=>{
+ state.speed=Number(e.target.value);
+ if(state.playing){
+  clearInterval(state.timer);
+  state.timer=setInterval(()=>{
+   if(!state.frames.length)return;
+   state.index=(state.index+1)%state.frames.length;
+   $("#radarSlider").value=state.index;
+   renderRadar();
+  },state.speed);
+ }
+});
+$("#autoRefresh").addEventListener("change",e=>state.auto=e.target.checked);
+$("#panelToggle").addEventListener("click",()=>{
+ const panel=$(".panel");const expanded=panel.classList.toggle("expanded");
+ $("#panelToggle").setAttribute("aria-expanded",String(expanded));
+ $("#panelToggle").textContent=expanded?"Méně⌃":"Více⌄";
 });
 
 $("#locate").addEventListener("click",()=>{
@@ -360,6 +514,12 @@ $("#searchForm").addEventListener("submit",async e=>{
 
 loadRadar();
 loadWeather();
+map.whenReady(()=>setTimeout(()=>map.invalidateSize(),120));
+window.addEventListener("resize",()=>map.invalidateSize(),{passive:true});
+if(window.visualViewport)window.visualViewport.addEventListener("resize",()=>map.invalidateSize(),{passive:true});
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden&&state.playing){clearInterval(state.timer);state.playing=false;$("#play").textContent="▶";}
+});
 
 /* Radar refresh can be frequent; weather is deliberately refreshed less often. */
 setInterval(()=>{if(state.auto)loadRadar()},5*60*1000);
