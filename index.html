@@ -196,6 +196,7 @@ button{cursor:pointer;touch-action:manipulation}
   <button class="close" id="closeSettings" type="button" aria-label="Zavřít">×</button>
   <h2 id="settingsTitle">Nastavení radaru</h2>
   <div class="settings-row"><span>Průhlednost radaru</span><input id="opacity" type="range" min=".2" max="1" step=".05" value=".72"></div>
+  <div class="settings-row"><span>Podkladová mapa</span><select id="basemap"><option value="dark">Tmavá</option><option value="osm">Světlá (OSM)</option></select></div>
   <div class="settings-row"><span>Rychlost animace</span><select id="speed"><option value="600">Rychlá</option><option value="950" selected>Normální</option><option value="1600">Pomalá</option></select></div>
   <div class="settings-row"><span>Automaticky aktualizovat</span><input id="autoRefresh" type="checkbox" checked></div>
   <p class="muted">Radar zobrazuje dostupné historické snímky. Krátkodobý výhled počasí je samostatná modelová předpověď.</p>
@@ -211,21 +212,40 @@ const state={
  opacity:.72,playing:false,timer:null,speed:950,auto:true,lastWeather:null,activeLayer:"radar"
 };
 
+try{Object.assign(state,{base:"dark",sat:false},JSON.parse(localStorage.getItem("worldRadar")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("worldRadar",JSON.stringify({lat:state.lat,lon:state.lon,place:state.place,opacity:state.opacity,speed:state.speed,auto:state.auto,base:state.base}))}catch(e){}};
 const map=L.map("map",{
  worldCopyJump:true,zoomAnimation:true,fadeAnimation:false,markerZoomAnimation:false,
  zoomSnap:.25,zoomDelta:.5
 }).setView([state.lat,state.lon],7);
 
 L.control.zoom({position:"bottomright"}).addTo(map);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
+const osm=L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
  maxZoom:19,attribution:"© OpenStreetMap contributors"
-}).addTo(map);
+});
+const dark=L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{
+ subdomains:"abcd",maxZoom:19,attribution:"© OpenStreetMap © CARTO"
+});
 
 const satellite=L.tileLayer(
  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
  {maxZoom:18,opacity:.86,attribution:"Esri World Imagery"}
 );
 const marker=L.marker([state.lat,state.lon]).addTo(map);
+function applyBase(){
+ [osm,dark,satellite].forEach(l=>map.hasLayer(l)&&map.removeLayer(l));
+ (state.sat?satellite:state.base==="osm"?osm:dark).addTo(map);
+}
+function syncTabs(){
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer==="radar"||(b.dataset.layer==="sat"&&state.sat)));
+}
+function setLocation(lat,lon,name,zoom){
+ state.lat=lat;state.lon=lon;state.place=name;
+ marker.setLatLng([lat,lon]);
+ if(zoom)map.setView([lat,lon],zoom);
+ save();loadWeather();
+}
+applyBase();
 
 const api=async url=>{
  const r=await fetch(url,{cache:"no-store"});
@@ -279,18 +299,22 @@ function renderRadar(){
  if(state.activeLayer==="radar"&&!map.hasLayer(state.radar))state.radar.addTo(map);
  if(state.activeLayer!=="radar"&&map.hasLayer(state.radar))map.removeLayer(state.radar);
 
- $("#radarTime").textContent=String(new Date(frame.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"}));
+ const mins=Math.round((frame.time*1000-Date.now())/60000);
+ $("#radarTime").textContent=new Date(frame.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})+
+  " · "+(Math.abs(mins)<3?"teď":mins<0?`před ${-mins} min`:`za ${mins} min`)+(frame.nowcast?" (předpověď)":"");
 }
 async function loadRadar(){
  try{
   const d=await api("https://api.rainviewer.com/public/weather-maps.json");
   const host=d.host||"https://tilecache.rainviewer.com";
   const oldCount=state.frames.length,oldIndex=state.index;
-  state.frames=(d.radar?.past||[]).map(x=>({...x,host}));
-  state.index=oldCount?Math.min(oldIndex,Math.max(0,state.frames.length-1)):Math.max(0,state.frames.length-1);
+  const past=(d.radar?.past||[]).map(x=>({...x,host}));
+  const now=(d.radar?.nowcast||[]).map(x=>({...x,host,nowcast:true}));
+  state.frames=[...past,...now];state.pastCount=past.length;
+  state.index=oldCount?Math.min(oldIndex,Math.max(0,state.frames.length-1)):Math.max(0,past.length-1);
   $("#radarSlider").max=Math.max(0,state.frames.length-1);
   $("#radarSlider").value=state.index;
-  $("#radarStatus").textContent=`${state.frames.length} historických snímků`;
+  $("#radarStatus").textContent=`${state.pastCount} historických snímků`+(state.frames.length>state.pastCount?` + ${state.frames.length-state.pastCount} předpověď`:"");
   renderRadar();
  }catch(e){
   console.error("Radar:",e);
@@ -412,24 +436,20 @@ async function loadWeather(){
 
 function setLayer(name){
  if(name==="sat"){
-  state.activeLayer="sat";
-  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer===name));
-  if(state.radar&&map.hasLayer(state.radar))map.removeLayer(state.radar);
-  if(!map.hasLayer(satellite))satellite.addTo(map);
-  notify("Satelitní podklad zapnut");
+  state.sat=!state.sat;applyBase();syncTabs();
+  notify(state.sat?"Satelitní podklad zapnut (radar zůstává nahoře)":"Satelitní podklad vypnut");
   return;
  }
  if(name==="radar"){
   state.activeLayer="radar";
-  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer===name));
-  if(map.hasLayer(satellite))map.removeLayer(satellite);
+  syncTabs();
   renderRadar();
   notify("Radar zapnut");
   return;
  }
  // These buttons navigate to the relevant data instead of pretending to be
  // map overlays when no verified global tile source is configured.
- document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",false));
+ syncTabs();
  if(name==="lightning"){
   $(".storm").scrollIntoView({behavior:"smooth",block:"nearest"});
   notify("Blesková hustota je modelový údaj, ne přesná poloha úderů.");
@@ -468,9 +488,11 @@ $("#refresh").addEventListener("click",()=>{
 $("#settings").addEventListener("click",()=>$("#settingsModal").classList.remove("hidden"));
 $("#closeSettings").addEventListener("click",()=>$("#settingsModal").classList.add("hidden"));
 $("#settingsModal").addEventListener("click",e=>{if(e.target.id==="settingsModal")$("#settingsModal").classList.add("hidden")});
-$("#opacity").addEventListener("input",e=>{state.opacity=Number(e.target.value);if(state.radar)state.radar.setOpacity(state.opacity)});
+$("#opacity").addEventListener("input",e=>{state.opacity=Number(e.target.value);if(state.radar)state.radar.setOpacity(state.opacity);save()});
+$("#opacity").value=state.opacity;$("#speed").value=String(state.speed);$("#autoRefresh").checked=state.auto;$("#basemap").value=state.base;
+$("#basemap").addEventListener("change",e=>{state.base=e.target.value;applyBase();save()});
 $("#speed").addEventListener("change",e=>{
- state.speed=Number(e.target.value);
+ state.speed=Number(e.target.value);save();
  if(state.playing){
   clearInterval(state.timer);
   state.timer=setInterval(()=>{
@@ -481,7 +503,7 @@ $("#speed").addEventListener("change",e=>{
   },state.speed);
  }
 });
-$("#autoRefresh").addEventListener("change",e=>state.auto=e.target.checked);
+$("#autoRefresh").addEventListener("change",e=>{state.auto=e.target.checked;save()});
 $("#panelToggle").addEventListener("click",()=>{
  const panel=$(".panel");const expanded=panel.classList.toggle("expanded");
  $("#panelToggle").setAttribute("aria-expanded",String(expanded));
@@ -491,10 +513,7 @@ $("#panelToggle").addEventListener("click",()=>{
 $("#locate").addEventListener("click",()=>{
  if(!navigator.geolocation)return notify("GPS není dostupné");
  navigator.geolocation.getCurrentPosition(p=>{
-  state.lat=p.coords.latitude;state.lon=p.coords.longitude;state.place="Moje poloha";
-  marker.setLatLng([state.lat,state.lon]);
-  map.setView([state.lat,state.lon],9);
-  loadWeather();
+  setLocation(p.coords.latitude,p.coords.longitude,"Moje poloha",9);
  },()=>notify("Poloha nebyla povolena"),{enableHighAccuracy:true,timeout:10000});
 });
 
@@ -502,14 +521,20 @@ $("#searchForm").addEventListener("submit",async e=>{
  e.preventDefault();
  const q=$("#query").value.trim();if(!q)return;
  try{
-  const data=await api("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q));
+  const data=await api("https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=cs&q="+encodeURIComponent(q));
   if(!data[0])return notify("Místo nenalezeno");
-  state.lat=Number(data[0].lat);state.lon=Number(data[0].lon);
-  state.place=data[0].display_name.split(",")[0];
-  marker.setLatLng([state.lat,state.lon]);
-  map.setView([state.lat,state.lon],9);
-  loadWeather();
+  setLocation(Number(data[0].lat),Number(data[0].lon),data[0].display_name.split(",")[0],9);
  }catch(e){console.error(e);notify("Vyhledávání se nepodařilo");}
+});
+
+map.on("click",async e=>{
+ const {lat,lng}=e.latlng;
+ setLocation(lat,lng,"Vybraný bod");
+ try{
+  const r=await api(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=10&accept-language=cs&lat=${lat}&lon=${lng}`);
+  const a=r.address||{},n=a.city||a.town||a.village||a.municipality||a.county;
+  if(n&&state.lat===lat){state.place=n;$("#place").textContent=n;save()}
+ }catch(err){}
 });
 
 loadRadar();
