@@ -1,0 +1,17 @@
+{
+  "name": "World Radar",
+  "short_name": "World Radar",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#06101c",
+  "theme_color": "#06101c",
+  "description": "Globální meteorologický radar a modelová předpověď.",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
