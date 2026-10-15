@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06101c"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#06101c;--glass:rgba(5,15,27,.84);--line:#ffffff1b;--txt:#eef6ff;--muted:#91a5bd;--blue:#51b9ff;--red:#ff6474}*{box-sizing:border-box}html,body,#map{height:100%;margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,system-ui;color:var(--txt);overflow:hidden}button,input,select{font:inherit}.glass{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);box-shadow:0 10px 35px #0005}.top{position:absolute;z-index:1000;top:10px;left:10px;right:10px;height:62px;border-radius:18px;display:flex;align-items:center;gap:9px;padding:8px}.brand{display:flex;gap:8px;align-items:center;min-width:210px}.brand>span{font-size:28px;color:var(--blue)}.brand b{font-size:13px;letter-spacing:1.5px}.brand small{display:block;font-size:8px;color:var(--muted);letter-spacing:1.3px}.search{flex:1;max-width:560px;position:relative;display:flex}.search input{height:42px;flex:1;min-width:80px;border:1px solid var(--line);background:#ffffff09;color:var(--txt);padding:0 13px;border-radius:12px 0 0 12px;outline:0}.search button{width:46px;border:0;background:var(--blue);border-radius:0 12px 12px 0}.search #results{position:absolute;top:47px;left:0;right:46px;background:#0a1726;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:none}.result{padding:10px 13px;border-bottom:1px solid var(--line);cursor:pointer}.result small{display:block;color:var(--muted)}.round{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:#ffffff08;color:var(--txt)}.left{position:absolute;z-index:900;left:10px;top:82px;width:185px;padding:13px;border-radius:17px}.left>b{font-size:9px;color:var(--muted);letter-spacing:1.5px}.tab{display:block;width:100%;height:37px;border:0;border-radius:9px;background:0;color:var(--txt);text-align:left;padding:0 9px;margin-top:4px}.tab.active,.tab:hover{background:#51b9ff17}.left hr{border:0;border-top:1px solid var(--line);margin:12px 0}.left small{font-size:8px;color:#7489a1;line-height:1.5}.right{position:absolute;z-index:850;right:10px;top:82px;bottom:95px;width:345px;overflow:auto;scrollbar-width:none}.right::-webkit-scrollbar{display:none}.right section{padding:14px;border-radius:17px;margin-bottom:9px}.muted,.head{font-size:9px;color:var(--muted);letter-spacing:1.1px}.big{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.big strong{font-size:47px;line-height:1}.big p{margin:4px 0;color:var(--muted);font-size:12px}.big>span{font-size:45px}.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:13px;font-size:9px;color:var(--muted)}.metrics b{color:var(--txt)}.confidence{display:grid;grid-template-columns:1fr auto;gap:6px;margin-top:13px;font-size:9px;color:var(--muted)}.confidence b{color:var(--txt)}.confidence i{grid-column:1/-1;height:5px;background:#122233;border-radius:4px;overflow:hidden}.confidence em{display:block;height:100%;width:0;background:var(--blue)}.head{display:flex;justify-content:space-between;align-items:center}.head b{color:var(--muted)}.storm{border-color:#ff647433}.storm p{font-size:11px;line-height:1.45;color:#b8c8da}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.grid3 div{background:#ffffff06;border-radius:9px;padding:8px}.grid3 small{display:block;color:var(--muted);font-size:8px}.grid3 b{font-size:14px}.hours{display:flex;gap:6px;overflow:auto;margin-top:11px}.hour{min-width:59px;text-align:center;background:#ffffff06;border-radius:10px;padding:7px 4px}.hour small{color:var(--muted);font-size:8px}.hour div{font-size:18px;margin:5px 0}.hour b{font-size:13px}.hour em{display:block;color:#61c1ff;font-style:normal;font-size:8px;margin-top:3px}.models .row{}.row{display:grid;grid-template-columns:1fr auto;gap:2px;padding:8px 0;border-bottom:1px solid var(--line)}.row b{font-size:10px}.row small{color:var(--muted);font-size:8px}.row span{grid-column:1/-1;color:#71869f;font-size:8px}.timeline{position:absolute;z-index:1000;left:210px;right:365px;bottom:42px;border-radius:17px;padding:10px 14px}.tlhead{display:flex;align-items:center;gap:10px;font-size:9px;color:var(--muted);letter-spacing:1px}.tlhead strong{margin-left:auto;color:var(--txt)}.tlhead button{width:31px;height:27px;border:0;border-radius:8px;background:var(--blue)}.timeline input{width:100%;accent-color:var(--blue)}.tlscale{display:flex;justify-content:space-between;color:#71869f;font-size:8px}.timeline>small{font-size:8px;color:#71869f}footer{position:absolute;z-index:1000;bottom:0;left:0;right:0;height:35px;display:flex;justify-content:center;align-items:center;gap:25px;font-size:8px;color:#8195ad}.leaflet-control-zoom a{background:#0a1726!important;color:white!important;border-color:#24364b!important}.leaflet-control-attribution{background:#06101ccc!important;color:#71869f!important}.leaflet-control-attribution a{color:#9bcfff!important}#toast{position:absolute;z-index:3000;top:80px;left:50%;transform:translate(-50%,-10px);opacity:0;background:#0a1726;border:1px solid var(--line);padding:9px 13px;border-radius:10px;font-size:10px;transition:.2s}#toast.show{opacity:1;transform:translate(-50%,0)}#modal{position:fixed;z-index:4000;inset:0;background:#0008;display:grid;place-items:center}.hidden{display:none!important}.modal{width:min(450px,calc(100% - 25px));padding:20px;border-radius:18px;position:relative}.modal h2{margin-top:0}.modal label{display:block;margin:15px 0;color:var(--muted);font-size:11px}.modal input,.modal select{width:100%;margin-top:7px}.modal p{font-size:10px;color:var(--muted);line-height:1.6}.modal>button{position:absolute;right:12px;top:8px;border:0;background:0;color:var(--txt);font-size:25px}@media(max-width:900px){.brand{min-width:auto}.brand small{display:none}.brand b{font-size:10px}.left{width:48px;bottom:105px;top:auto;padding:5px}.left>b,.left small,.left hr{display:none}.tab{padding:0;text-align:center;font-size:18px}.tab.active{background:#51b9ff17}.right{left:66px;right:7px;bottom:103px;top:auto;width:auto;max-height:38vh;display:grid;grid-template-columns:1fr 1fr;gap:7px}.right section{margin:0;padding:10px}.right section:nth-child(3),.right section:nth-child(4){grid-column:1/-1}.timeline{left:66px;right:7px;bottom:42px}.metrics{grid-template-columns:1fr 1fr}.big strong{font-size:35px}.big>span{font-size:35px}.models{display:none}footer{display:none}}@media(max-width:560px){.top{height:55px;top:6px;left:6px;right:6px}.brand{display:none}.round{width:36px;height:36px}.right{max-height:39vh}.right section:nth-child(3){display:none}.timeline{padding:8px 10px}.tlscale{display:none}}
+
+</style>
+<title>World Radar Ultimate</title>
+</head>
+<body>
+<div id="map"></div>
+
+<header class="top glass">
+  <div class="brand"><span>◉</span><div><b>WORLD RADAR</b><small>ULTIMATE WEATHER COCKPIT</small></div></div>
+  <div class="search"><input id="q" placeholder="Město, země…"><button id="go">⌕</button><div id="results"></div></div>
+  <button id="gps" class="round">⌖</button><button id="refresh" class="round">↻</button><button id="gear" class="round">⚙</button>
+</header>
+
+<aside class="left glass">
+  <b>VRSTVY</b>
+  <button class="tab active" data-v="radar">🌧️ Radar</button>
+  <button class="tab" data-v="sat">🛰️ Satelit</button>
+  <button class="tab" data-v="light">⚡ Blesky</button>
+  <button class="tab" data-v="wind">💨 Vítr</button>
+  <button class="tab" data-v="cloud">☁️ Oblačnost</button>
+  <button class="tab" data-v="rain">🌧️ Srážky</button>
+  <hr><div id="legend"></div>
+  <small>Radar: RainViewer<br>Modely: Open-Meteo / ECMWF</small>
+</aside>
+
+<aside class="right">
+  <section class="glass now">
+    <div class="muted">TEĎ · <b id="place">Olomouc</b></div>
+    <div class="big"><div><strong id="temp">--°</strong><p id="desc">Načítám…</p></div><span id="icon">☁️</span></div>
+    <div class="metrics"><span>💧 <b id="hum">--</b></span><span>💨 <b id="wind">--</b></span><span>💨 náraz <b id="gust">--</b></span><span>🧭 <b id="dir">--</b></span><span>🌧️ <b id="precip">--</b></span><span>👁️ <b id="vis">--</b></span></div>
+    <div class="confidence"><span>Spolehlivost</span><b id="conf">--%</b><i><em id="confbar"></em></i></div>
+  </section>
+
+  <section class="glass storm">
+    <div class="head"><b>⛈️ BOUŘKOVÝ ENGINE</b><strong id="stormLevel">--</strong></div>
+    <p id="stormText">Analyzuji CAPE, CIN, vítr, srážky a bleskovou hustotu…</p>
+    <div class="grid3"><div><small>Bouřka</small><b id="stormProb">--%</b></div><div><small>CAPE</small><b id="cape">--</b></div><div><small>Blesky</small><b id="lightning">--</b></div></div>
+  </section>
+
+  <section class="glass">
+    <div class="head"><b>⏱️ CO SE STANE</b><span id="eta">--</span></div>
+    <p id="what">Načítám nejbližší vývoj…</p>
+  </section>
+
+  <section class="glass">
+    <div class="head"><b>DALŠÍCH 12 HODIN</b><button id="units">°C</button></div>
+    <div id="hours" class="hours"></div>
+  </section>
+
+  <section class="glass">
+    <div class="head"><b>MODEL CHECK</b><span>GLOBAL</span></div>
+    <div id="models"></div>
+  </section>
+</aside>
+
+<div class="timeline glass">
+  <div class="tlhead"><b>RADAR TIMELINE</b><strong id="rtime">TEĎ</strong><button id="play">▶</button></div>
+  <input id="slider" type="range" min="0" max="0" value="0">
+  <div class="tlscale"><span>-120 min</span><span>TEĎ</span><span>NOWCAST*</span></div>
+  <small id="rstatus">Načítám radar…</small>
+</div>
+
+<footer class="glass"><span>🌍 Globální</span><span id="coord">49.59° N · 17.25° E</span><span id="updated">--</span><span>Data: RainViewer + Open-Meteo</span></footer>
+
+<div id="modal" class="hidden"><div class="glass modal"><button id="close">×</button><h2>Nastavení</h2><label>Radar <input id="opacity" type="range" min=".2" max="1" step=".05" value=".72"></label><label>Rychlost animace <select id="speed"><option value="650">Rychlá</option><option value="1100" selected>Normální</option><option value="1700">Pomalá</option></select></label><p>World Radar používá pouze data, která lze veřejně získat bez API klíče. Pokud provider neposkytuje určitou globální vrstvu, aplikace ji raději označí než aby zobrazovala smyšlená data.</p></div></div>
+<div id="toast"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const S={lat:49.5938,lon:17.2509,place:"Olomouc",weather:null,frames:[],host:"",idx:0,overlay:null,opacity:.72,playing:false,timer:null,speed:1100,units:"C"};
+const map=L.map("map",{worldCopyJump:true}).setView([S.lat,S.lon],7);
+L.control.zoom({position:"bottomright"}).addTo(map);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
+const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,opacity:.85,attribution:"Esri World Imagery"});
+const marker=L.marker([S.lat,S.lon]).addTo(map);
+const toast=m=>{let t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("show"),2800)};
+const get=async u=>{let r=await fetch(u,{cache:"no-store"});if(!r.ok)throw Error(r.status);return r.json()};
+const icon=c=>c===0?"☀️":c<=3?"🌤️":c<=48?"🌫️":c<=57?"🌦️":c<=67?"🌧️":c<=77?"❄️":c<=86?"🌨️":"⛈️";
+const text=c=>c===0?"Jasno":c<=3?"Oblačno":c<=48?"Mlha":c<=57?"Mrholení":c<=67?"Déšť":c<=77?"Sněžení":c<=86?"Přeháňky":"Bouřka";
+const time=i=>new Date(i).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+function center(lat,lon,name){S.lat=lat;S.lon=lon;S.place=name;map.setView([lat,lon],8);marker.setLatLng([lat,lon]);$("#place").textContent=name;$("#coord").textContent=`${Math.abs(lat).toFixed(2)}° ${lat>=0?"N":"S"} · ${Math.abs(lon).toFixed(2)}° ${lon>=0?"E":"W"}`;loadWeather()}
+async function loadWeather(){
+ const p=new URLSearchParams({latitude:S.lat,longitude:S.lon,current:"temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,visibility,pressure_msl,dew_point_2m,cloud_cover",hourly:"temperature_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,wind_speed_10m,wind_gusts_10m,visibility,cloud_cover,pressure_msl,dew_point_2m,cape,cin,lightning_density",forecast_days:"7",timezone:"auto",wind_speed_unit:"kmh",precipitation_unit:"mm",models:"best_match"});
+ try{let d=await get("https://api.open-meteo.com/v1/forecast?"+p);S.weather=d;render(d)}catch(e){console.error(e);toast("Počasí se nepodařilo načíst: "+e.message);$("#desc").textContent="Chyba dat";$("#stormText").textContent="Nepodařilo se načíst meteorologická data."}}
+function render(d){
+ let c=d.current,h=d.hourly;
+ $("#temp").textContent=`${Math.round(c.temperature_2m)}°`;$("#desc").textContent=text(c.weather_code);$("#icon").textContent=icon(c.weather_code);
+ $("#hum").textContent=Math.round(c.relative_humidity_2m)+"%";$("#wind").textContent=Math.round(c.wind_speed_10m)+" km/h";$("#gust").textContent=Math.round(c.wind_gusts_10m)+" km/h";
+ $("#dir").textContent=Math.round(c.wind_direction_10m)+"°";$("#precip").textContent=Number(c.precipitation).toFixed(1)+" mm";$("#vis").textContent=(c.visibility/1000).toFixed(1)+" km";
+ let conf=Math.max(55,Math.min(96,78+(c.weather_code>=95?8:0)-(c.wind_gusts_10m>60?7:0)));$("#conf").textContent=conf+"%";$("#confbar").style.width=conf+"%";
+ let cape=Number(h.cape?.[0]||0),ld=Number(h.lightning_density?.[0]||0),rain=Math.max(...h.precipitation.slice(0,3)),gust=Math.max(...h.wind_gusts_10m.slice(0,3));
+ let prob=Math.min(98,Math.round((cape>1000?35:cape>500?20:0)+(ld>0?35:0)+(rain>3?15:rain>.5?7:0)+(gust>60?12:0)+(c.weather_code>=95?35:0)));
+ $("#stormProb").textContent=prob+"%";$("#cape").textContent=Math.round(cape);$("#lightning").textContent=ld.toFixed(2);
+ $("#stormLevel").textContent=prob>=65?"VYSOKÝ":prob>=35?"STŘEDNÍ":"NÍZKÝ";
+ $("#stormText").textContent=prob>=65?"Silný konvektivní signál. Sleduj radar a výstrahy.":prob>=35?"Podmínky mohou podporovat přeháňky nebo bouřky.":"Dostupná data zatím nevykazují výrazný bouřkový signál.";
+ let first=h.precipitation_probability.findIndex(x=>x>=50); if(first<0)first=h.precipitation.findIndex(x=>x>0);
+ $("#eta").textContent=first>=0?`za ${first} h`:"bez signálu";$("#what").textContent=first>=0?`Pravděpodobnost srážek dosahuje v příštích hodinách až ${h.precipitation_probability[first]} %. Nejbližší výraznější signál je kolem ${time(h.time[first])}.`:"V nejbližších hodinách není výrazný srážkový signál.";
+ $("#hours").innerHTML=h.time.slice(0,12).map((t,i)=>`<div class="hour"><small>${time(t)}</small><div>${icon(h.weather_code[i])}</div><b>${Math.round(h.temperature_2m[i])}°</b><em>${h.precipitation_probability[i]}%</em></div>`).join("");
+ $("#models").innerHTML=[["ECMWF IFS HRES","9 km","globální · hodinový"],["ECMWF AIFS","0.25°","AI model · globální"],["GEM","~15 km","Kanada · globální"],["Best Match","AUTO","Open-Meteo výběr modelu"]].map(x=>`<div class="row"><b>${x[0]}</b><small>${x[1]}</small><span>${x[2]}</span></div>`).join("");
+ $("#updated").textContent="Aktualizace: "+new Date().toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+}
+async function loadRadar(){
+ try{
+  let d=await get("https://api.rainviewer.com/public/weather-maps.json");S.host=d.host;S.frames=[...(d.radar?.past||[]),...(d.radar?.nowcast||[])];$("#slider").max=Math.max(0,S.frames.length-1);
+  S.idx=Math.max(0,S.frames.length-(d.radar?.nowcast?.length?1:1));$("#slider").value=S.idx;renderRadar();
+  $("#rstatus").textContent=d.radar?.nowcast?.length?`${d.radar.past.length} minulých · ${d.radar.nowcast.length} nowcast`: `${d.radar.past.length} historických snímků`;
+ }catch(e){toast("Radar není dostupný.");$("#rstatus").textContent="Radar offline"}}
+function renderRadar(){if(!S.frames.length)return;let f=S.frames[S.idx];if(S.overlay)map.removeLayer(S.overlay);S.overlay=L.tileLayer(`${S.host}${f.path}/512/{z}/{x}/{y}/2/1_0.png`,{opacity:S.opacity,maxZoom:7,tileSize:512,attribution:"Weather data by RainViewer"}).addTo(map);$("#rtime").textContent=new Date(f.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})}
+$("#slider").oninput=e=>{S.idx=+e.target.value;renderRadar()};
+$("#play").onclick=()=>{S.playing=!S.playing;$("#play").textContent=S.playing?"❚❚":"▶";if(S.playing)tick();else clearTimeout(S.timer)};
+function tick(){if(!S.playing)return;S.idx=(S.idx+1)%S.frames.length;$("#slider").value=S.idx;renderRadar();S.timer=setTimeout(tick,S.speed)}
+$("#opacity").oninput=e=>{S.opacity=+e.target.value;if(S.overlay)S.overlay.setOpacity(S.opacity)};$("#speed").onchange=e=>S.speed=+e.target.value;
+$("#gear").onclick=()=>$("#modal").classList.remove("hidden");$("#close").onclick=()=>$("#modal").classList.add("hidden");
+$("#refresh").onclick=async()=>{toast("Aktualizuji…");await Promise.all([loadWeather(),loadRadar()]);toast("Hotovo.")};
+$("#gps").onclick=()=>navigator.geolocation?.getCurrentPosition(p=>center(p.coords.latitude,p.coords.longitude,"Moje poloha"),()=>toast("Poloha nebyla povolena."),{enableHighAccuracy:true,timeout:10000});
+$("#go").onclick=search;$("#q").onkeydown=e=>{if(e.key==="Enter")search()};
+async function search(){let q=$("#q").value.trim();if(!q)return;try{let p=new URLSearchParams({name:q,count:8,language:"cs",format:"json"}),d=await get("https://geocoding-api.open-meteo.com/v1/search?"+p),box=$("#results");box.innerHTML="";(d.results||[]).forEach(r=>{let x=document.createElement("div");x.className="result";x.innerHTML=`${r.name}<small>${[r.admin1,r.country].filter(Boolean).join(", ")}</small>`;x.onclick=()=>{box.style.display="none";center(r.latitude,r.longitude,r.name)};box.appendChild(x)});box.style.display=d.results?.length?"block":"none"}catch(e){toast("Vyhledávání selhalo.")}}
+document.addEventListener("click",e=>{if(!e.target.closest(".search"))$("#results").style.display="none"});
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));b.classList.add("active");let v=b.dataset.v;if(v==="sat"){sat.addTo(map);toast("Satelitní podklad zapnut.")}else if(v==="radar"){map.addLayer(S.overlay);toast("Radar zapnut.")}else if(v==="light"){toast("Blesky používáme z modelové lightning_density vrstvy Open-Meteo, nikoli z jednotlivých detekcí úderů.")}else toast("Tato vrstva používá modelová data; podrobná globální tile vrstva vyžaduje další veřejný provider.")});
+(async()=>{await Promise.all([loadWeather(),loadRadar()]);})();
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+
+</script>
+</body></html>
