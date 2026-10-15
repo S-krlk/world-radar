@@ -1,10 +1,9 @@
-const CACHE="world-radar-v1";
-const APP=["./","./index.html","./manifest.webmanifest","./icon.svg"];
-self.addEventListener("install",e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(APP))));
-self.addEventListener("activate",e=>e.waitUntil(self.clients.claim()));
+const C="wr-v1";
+self.addEventListener("install",()=>self.skipWaiting());
+self.addEventListener("activate",e=>e.waitUntil(clients.claim()));
 self.addEventListener("fetch",e=>{
-  const u=new URL(e.request.url);
-  if(u.origin===location.origin){
-    e.respondWith(caches.match(e.request).then(x=>x||fetch(e.request)));
-  }
+ const r=e.request;if(r.method!=="GET")return;
+ const u=new URL(r.url);
+ if(!(u.origin===location.origin||/unpkg\.com|api\.open-meteo\.com|api\.rainviewer\.com/.test(u.host)))return;
+ e.respondWith(fetch(r).then(res=>{if(res.ok||res.type==="opaque"){const c=res.clone();caches.open(C).then(x=>x.put(r,c))}return res}).catch(()=>caches.match(r).then(m=>m||Response.error())));
 });

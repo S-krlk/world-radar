@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<meta name="application-name" content="World Radar">
 <meta name="theme-color" content="#071522">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -116,6 +117,13 @@ button{cursor:pointer;touch-action:manipulation}
  .forecast{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#122536;color:#fff;border-radius:10px;padding:5px 9px;font-size:12px}
+.day{display:grid;grid-template-columns:1.1fr .5fr 1fr 1fr;gap:4px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:11px}
+.day b{text-align:right;font-size:12px}
+.storm.hot{border-color:#ff5c5c;box-shadow:0 0 0 1px #ff5c5c88,0 8px 30px #0006}
+.storm.hot #stormLevel{color:#ff7b7b}
+.wind{display:flex;flex-direction:column;align-items:center;font-size:9px;font-weight:700;text-shadow:0 0 3px #000;pointer-events:none}
 </style>
 </head>
 <body>
@@ -139,7 +147,7 @@ button{cursor:pointer;touch-action:manipulation}
 <div class="panel">
 <div class="topcard">
 <section class="card weather-card">
-<div class="card-head"><div class="muted">TEĎ · <b id="place">Olomouc</b></div><button id="panelToggle" type="button" aria-expanded="false">Více⌄</button></div>
+<div class="card-head"><div class="muted">TEĎ · <b id="place">Olomouc</b></div><div style="display:flex;gap:6px"><button id="fav" type="button" class="chip" aria-label="Oblíbené místo">☆</button><button id="panelToggle" type="button" aria-expanded="false">Více⌄</button></div></div>
 <div><span id="temp" class="temp">--°</span> <span id="weatherIcon">☁️</span></div>
 <div id="description" class="muted">Načítám počasí…</div>
 <div id="updated" class="muted" style="margin-top:4px;font-size:12px">--</div>
@@ -175,13 +183,18 @@ button{cursor:pointer;touch-action:manipulation}
 <section class="card extra-card">
 <div class="muted">🔮 NOWCAST</div>
 <p id="nowcastText">Načítám krátkodobý výhled…</p>
+<p id="rainAlert" style="font-size:12px;line-height:1.45;margin:0 0 8px;font-weight:700"></p>
 <div class="muted" id="nowcastDetail">Radar a model se načítají samostatně.</div>
+<div class="muted" id="steer" style="margin-top:6px"></div>
 </section>
 
 <section class="card extra-card">
 <div class="muted" style="margin-bottom:8px">🕐 HOURLY FORECAST</div>
 <div id="forecast" class="forecast"></div>
 </section>
+<section class="card extra-card"><div class="muted" style="margin-bottom:8px">☔ SRÁŽKY · 24 H</div><div id="chart"></div></section>
+<section class="card extra-card"><div class="muted" style="margin-bottom:6px">📅 7 DNÍ</div><div id="daily"></div></section>
+<section class="card extra-card"><div class="muted" style="margin-bottom:8px">⭐ OBLÍBENÁ MÍSTA</div><div id="favs" class="chips"></div></section>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -197,6 +210,7 @@ button{cursor:pointer;touch-action:manipulation}
   <h2 id="settingsTitle">Nastavení radaru</h2>
   <div class="settings-row"><span>Průhlednost radaru</span><input id="opacity" type="range" min=".2" max="1" step=".05" value=".72"></div>
   <div class="settings-row"><span>Podkladová mapa</span><select id="basemap"><option value="dark">Tmavá</option><option value="osm">Světlá (OSM)</option></select></div>
+  <div class="settings-row"><span>Upozornění na déšť</span><input id="notif" type="checkbox"></div>
   <div class="settings-row"><span>Rychlost animace</span><select id="speed"><option value="600">Rychlá</option><option value="950" selected>Normální</option><option value="1600">Pomalá</option></select></div>
   <div class="settings-row"><span>Automaticky aktualizovat</span><input id="autoRefresh" type="checkbox" checked></div>
   <p class="muted">Radar zobrazuje dostupné historické snímky. Krátkodobý výhled počasí je samostatná modelová předpověď.</p>
@@ -237,7 +251,7 @@ function applyBase(){
  (state.sat?satellite:state.base==="osm"?osm:dark).addTo(map);
 }
 function syncTabs(){
- document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer==="radar"||(b.dataset.layer==="sat"&&state.sat)));
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer==="radar"||(b.dataset.layer==="sat"&&state.sat)||(b.dataset.layer==="wind"&&state.windOn)||(b.dataset.layer==="cloud"&&state.cloudOn)));
 }
 function setLocation(lat,lon,name,zoom){
  state.lat=lat;state.lon=lon;state.place=name;
@@ -310,6 +324,7 @@ async function loadRadar(){
   const oldCount=state.frames.length,oldIndex=state.index;
   const past=(d.radar?.past||[]).map(x=>({...x,host}));
   const now=(d.radar?.nowcast||[]).map(x=>({...x,host,nowcast:true}));
+  const ir=d.satellite?.infrared||[];state.ir=ir.length?{...ir[ir.length-1],host}:null;
   state.frames=[...past,...now];state.pastCount=past.length;
   state.index=oldCount?Math.min(oldIndex,Math.max(0,state.frames.length-1)):Math.max(0,past.length-1);
   $("#radarSlider").max=Math.max(0,state.frames.length-1);
@@ -344,7 +359,7 @@ function renderForecast(hourly,startIndex){
  }
 }
 async function loadWeather(){
- const base=`latitude=${state.lat}&longitude=${state.lon}&timezone=auto&forecast_days=2`;
+ const base=`latitude=${state.lat}&longitude=${state.lon}&timezone=auto&forecast_days=7`;
 
  /* MAIN WEATHER REQUEST
     Nothing in the optional storm engine is allowed to break this request. */
@@ -353,6 +368,7 @@ async function loadWeather(){
    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,`+
    `weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,visibility,cloud_cover,`+
    `surface_pressure`+
+   `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum`+
    `&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,`+
    `wind_speed_10m,wind_gusts_10m,cloud_cover`;
   const d=await api(url),c=d.current,h=d.hourly||{};
@@ -421,6 +437,7 @@ async function loadWeather(){
   $("#stormLevel").textContent=score==null?"NEDOSTUPNÉ":
     score>=65?"VYSOKÝ":score>=35?"STŘEDNÍ":"NÍZKÝ";
   $("#stormModel").textContent="Open-Meteo";
+  document.querySelector(".storm").classList.toggle("hot",score!=null&&score>=65);
   $("#stormText").textContent=score==null
     ?"Bouřková data nejsou momentálně dostupná."
     :`Konvekční index ${Math.round(score)} %. CAPE ${value(cape," J/kg")} · CIN ${value(cin," J/kg")}.`;
@@ -454,11 +471,9 @@ function setLayer(name){
   $(".storm").scrollIntoView({behavior:"smooth",block:"nearest"});
   notify("Blesková hustota je modelový údaj, ne přesná poloha úderů.");
  }else if(name==="wind"){
-  $(".weather-card").scrollIntoView({behavior:"smooth",block:"nearest"});
-  notify("Vítr, směr a nárazy jsou v panelu počasí.");
+  toggleWind();
  }else if(name==="cloud"){
-  $(".weather-card").scrollIntoView({behavior:"smooth",block:"nearest"});
-  notify("Oblačnost je uvedena v panelu. Skutečný satelitní obraz najdeš pod 🛰️.");
+  toggleCloud();
  }
 }
 document.querySelectorAll(".tab").forEach(b=>
@@ -536,6 +551,105 @@ map.on("click",async e=>{
   if(n&&state.lat===lat){state.place=n;$("#place").textContent=n;save()}
  }catch(err){}
 });
+
+/* ---------- Oblíbená místa ---------- */
+let favs=[];try{favs=JSON.parse(localStorage.getItem("worldRadarFavs")||"[]")}catch(e){}
+const same=f=>Math.abs(f.lat-state.lat)<.01&&Math.abs(f.lon-state.lon)<.01;
+function renderFavs(){
+ $("#fav").textContent=favs.some(same)?"★":"☆";
+ const box=$("#favs");box.innerHTML="";
+ favs.forEach(f=>{const b=document.createElement("button");b.className="chip";b.textContent=f.place;b.onclick=()=>setLocation(f.lat,f.lon,f.place,9);box.appendChild(b)});
+ if(!favs.length)box.innerHTML='<span class="muted">Místo uložíš hvězdičkou ☆ v panelu počasí.</span>';
+}
+$("#fav").onclick=()=>{
+ favs=favs.some(same)?favs.filter(f=>!same(f)):[...favs,{lat:state.lat,lon:state.lon,place:state.place}];
+ try{localStorage.setItem("worldRadarFavs",JSON.stringify(favs))}catch(e){}
+ renderFavs();
+};
+
+/* ---------- Oblačnost (družice RainViewer IR) ---------- */
+let cloudLayer=null;
+function toggleCloud(){
+ if(!state.ir)return notify("Družicová oblačnost teď není dostupná");
+ state.cloudOn=!state.cloudOn;
+ if(cloudLayer){map.removeLayer(cloudLayer);cloudLayer=null}
+ if(state.cloudOn)cloudLayer=L.tileLayer(`${state.ir.host}${state.ir.path}/256/{z}/{x}/{y}/0/0_0.png`,{maxNativeZoom:6,maxZoom:19,opacity:.6,zIndex:20,attribution:"Satelit: RainViewer"}).addTo(map);
+ syncTabs();notify(state.cloudOn?"Oblačnost (infračervená družice) zapnuta":"Oblačnost vypnuta");
+}
+
+/* ---------- Vítr na mapě ---------- */
+const windLayer=L.layerGroup();
+async function drawWind(){
+ if(!state.windOn)return;
+ const b=map.getBounds(),la=[],lo=[],N=5,M=4;
+ for(let i=0;i<N;i++)for(let j=0;j<M;j++){
+  la.push((b.getSouth()+(b.getNorth()-b.getSouth())*(j+.5)/M).toFixed(2));
+  lo.push((b.getWest()+(b.getEast()-b.getWest())*(i+.5)/N).toFixed(2));
+ }
+ try{
+  const r=await api(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current=wind_speed_10m,wind_direction_10m`);
+  const arr=Array.isArray(r)?r:[r];
+  windLayer.clearLayers();
+  arr.forEach((p,k)=>{
+   const sp=p.current?.wind_speed_10m,dr=p.current?.wind_direction_10m;if(sp==null)return;
+   const col=sp>50?"#ff5c5c":sp>30?"#ffb347":sp>15?"#ffe066":"#8fe3ff";
+   windLayer.addLayer(L.marker([la[k],lo[k]],{interactive:false,icon:L.divIcon({className:"",iconSize:[40,44],iconAnchor:[20,22],
+    html:`<div class="wind"><svg width="30" height="30" viewBox="-15 -15 30 30" style="transform:rotate(${(dr+180)%360}deg)"><path d="M0,-12L7,9L0,5L-7,9Z" fill="${col}" stroke="#000" stroke-opacity=".5"/></svg><span style="color:${col}">${Math.round(sp)}</span></div>`})}));
+  });
+ }catch(e){console.warn("Wind:",e);notify("Vítr se nepodařilo načíst")}
+}
+function toggleWind(){
+ state.windOn=!state.windOn;
+ if(state.windOn){windLayer.addTo(map);drawWind()}else{map.removeLayer(windLayer)}
+ syncTabs();notify(state.windOn?"Vítr v km/h, šipky ukazují směr proudění":"Vítr vypnut");
+}
+map.on("moveend",drawWind);
+
+/* ---------- Upozornění na déšť, pohyb srážek, graf, 7 dní ---------- */
+if(localStorage.getItem("worldRadarNotify")==="1")$("#notif").checked=true;
+$("#notif").addEventListener("change",async e=>{
+ try{localStorage.setItem("worldRadarNotify",e.target.checked?"1":"0")}catch(x){}
+ if(e.target.checked&&"Notification" in window&&Notification.permission==="default")await Notification.requestPermission();
+ if(e.target.checked&&(!("Notification" in window)||Notification.permission==="denied"))notify("Notifikace nejsou v tomto prohlížeči povoleny; upozornění uvidíš jen v panelu.");
+});
+let lastAlert="";
+async function loadExtras(){
+ renderFavs();
+ const w=state.lastWeather;
+ if(w?.daily){
+  const box=$("#daily"),d=w.daily;box.innerHTML="";
+  d.time.forEach((t,i)=>{
+   const el=document.createElement("div");el.className="day";
+   el.innerHTML=`<span>${new Date(t).toLocaleDateString("cs-CZ",{weekday:"short",day:"numeric",month:"numeric"})}</span><span>${weatherInfo(d.weather_code[i])[0]}</span><span>🌧️ ${value(d.precipitation_sum[i]," mm")}</span><b>${Math.round(d.temperature_2m_min[i])}° / ${Math.round(d.temperature_2m_max[i])}°</b>`;
+   box.appendChild(el);
+  });
+ }
+ if(w?.hourly&&w.current){
+  const h=w.hourly,s=currentHourIndex(h.time,w.current.time),v=(h.precipitation||[]).slice(s,s+24),mx=Math.max(1,...v);
+  $("#chart").innerHTML=`<svg viewBox="0 0 240 60" width="100%" height="60" preserveAspectRatio="none">${v.map((x,i)=>`<rect x="${i*10+1}" y="${58-x/mx*54}" width="8" height="${x>0?Math.max(1.5,x/mx*54):0}" rx="1" fill="#49aef1"/>`).join("")}</svg><div class="muted">Příštích 24 h · max ${mx.toFixed(1)} mm/h</div>`;
+ }
+ try{
+  const cur=w?.current?.time||"";
+  const d=await api(`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&timezone=auto&forecast_days=2&minutely_15=precipitation&hourly=wind_speed_700hPa,wind_direction_700hPa`);
+  const m=d.minutely_15,i0=Math.max(0,m.time.findIndex(t=>t>=cur)),p=m.precipitation.slice(i0,i0+8);
+  const first=p.findIndex(x=>x>=.1),end=p.findIndex(x=>x<.1);
+  const msg=p[0]>=.1?(end>0?`🌧️ Právě prší, podle modelu skončí za ~${end*15} min.`:"🌧️ Právě prší a podle modelu to vydrží aspoň 2 hodiny.")
+   :first>0?`⚠️ Za ~${first*15} min začne pršet (${p[first].toFixed(1)} mm/15 min).`:"✅ Příští 2 hodiny by mělo být sucho.";
+  $("#rainAlert").textContent=msg;
+  if($("#notif").checked&&"Notification" in window&&Notification.permission==="granted"&&first>0&&first*15<=30){
+   const key=state.place+m.time[i0+first];
+   if(key!==lastAlert){lastAlert=key;new Notification("World Radar · "+state.place,{body:msg})}
+  }
+  const hi=Math.max(0,d.hourly.time.findIndex(t=>t.slice(0,13)===cur.slice(0,13)));
+  const sp=d.hourly.wind_speed_700hPa?.[hi],dr=d.hourly.wind_direction_700hPa?.[hi];
+  $("#steer").textContent=sp==null?"":`🧭 Odhad pohybu srážek (proudění ve 3 km): směr ${windDir((dr+180)%360)}, ${Math.round(sp)} km/h. Jde o model, ne měření radaru.`;
+ }catch(e){console.warn("Alert:",e);$("#rainAlert").textContent="Krátkodobé upozornění není dostupné.";$("#steer").textContent=""}
+}
+const _loadWeather=loadWeather;
+loadWeather=async function(){await _loadWeather();loadExtras()};
+
+/* ---------- PWA ---------- */
+if("serviceWorker" in navigator&&location.protocol!=="file:")navigator.serviceWorker.register("./sw.js").catch(()=>{});
 
 loadRadar();
 loadWeather();
