@@ -1,127 +1,73 @@
 <!doctype html>
 <html lang="cs">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#06101c">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="World Radar: globální radar, satelit, modelová předpověď a bouřkový panel.">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icon.svg">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <title>World Radar</title>
-  <style>
-    :root{color-scheme:dark;--bg:#06101c;--panel:#071522e8;--line:#ffffff18;--text:#eef6ff;--muted:#91a5bd;--accent:#53baff}
-    *{box-sizing:border-box}html,body,#map{height:100%;margin:0}body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,system-ui,sans-serif;overflow:hidden}
-    #map{height:100dvh}
-    .glass{background:var(--panel);border:1px solid var(--line);box-shadow:0 12px 40px #0006;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-    .top{position:fixed;z-index:1200;left:8px;right:8px;top:max(8px,env(safe-area-inset-top));height:58px;padding:7px;border-radius:17px;display:flex;align-items:center;gap:7px}
-    .brand{min-width:172px}.brand b{font-size:12px;letter-spacing:1.5px}.brand small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
-    .search{height:42px;display:flex;flex:1;max-width:620px}.search input{min-width:0;flex:1;background:#ffffff09;color:#fff;border:1px solid var(--line);padding:0 12px;border-radius:11px 0 0 11px;outline:none}.search button,.iconbtn{border:1px solid var(--line);background:#ffffff09;color:#fff;height:42px;border-radius:11px;padding:0 13px;font-size:16px}.search button{border-radius:0 11px 11px 0;background:var(--accent);color:#06101c;border-color:transparent}.iconbtn{min-width:42px}
-    .left{position:fixed;z-index:1100;left:8px;top:76px;width:48px;padding:5px;border-radius:15px}.tab{width:38px;height:38px;margin:2px 0;border:0;border-radius:10px;background:transparent;color:#fff;font-size:17px}.tab.active{background:#53baff20;box-shadow:inset 0 0 0 1px #53baff22}
-    .right{position:fixed;z-index:1050;right:8px;top:76px;bottom:88px;width:345px;overflow:auto;padding-right:1px}.card{padding:13px;border-radius:16px;margin-bottom:8px}.muted{color:var(--muted);font-size:10px}.hero{display:flex;justify-content:space-between;align-items:center}.temp{font-size:48px;font-weight:750;letter-spacing:-2px}.weather-icon{font-size:40px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:8px}.metric{background:#ffffff08;border-radius:10px;padding:8px;font-size:9px;color:var(--muted)}.metric b{display:block;color:#fff;font-size:13px;margin-top:2px}.storm{border-color:#ff6a7c35}.storm-score{font-size:29px;font-weight:800}.status{font-size:10px}.good{color:#79e29c}.warn{color:#ffd166}.danger{color:#ff7184}
-    .hours{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}.hour{min-width:61px;text-align:center;background:#ffffff08;border-radius:10px;padding:8px 5px;font-size:9px}.hour b{font-size:10px}.hour strong{display:block;font-size:15px;margin:3px 0}.bar{height:4px;border-radius:99px;background:#ffffff0d;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;background:var(--accent)}
-    .timeline{position:fixed;z-index:1200;left:64px;right:361px;bottom:max(9px,env(safe-area-inset-bottom));padding:9px 12px;border-radius:16px}.timeline-head{display:flex;justify-content:space-between;align-items:center;font-size:10px}.timeline input{width:100%;accent-color:var(--accent)}.tiny{color:var(--muted);font-size:9px}
-    .toast{position:fixed;z-index:3000;left:50%;bottom:95px;transform:translateX(-50%);background:#071522f5;border:1px solid var(--line);padding:10px 13px;border-radius:12px;font-size:11px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
-    .modal{position:fixed;inset:0;z-index:4000;display:grid;place-items:center;background:#0009;padding:20px}.modal.hidden{display:none}.modalbox{width:min(430px,100%);padding:18px;border-radius:18px}.modalbox h2{margin:0 0 16px}.row{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}select,input[type=range]{accent-color:var(--accent)}.close{float:right;border:0;background:#ffffff12;color:#fff;border-radius:10px;padding:7px 10px}
-    .leaflet-control-attribution{font-size:8px}
-    @media(max-width:800px){
-      .brand{display:none}.top{height:52px}.search{max-width:none}.right{left:60px;right:6px;top:auto;bottom:99px;width:auto;max-height:39dvh}.left{top:auto;bottom:99px}.timeline{left:60px;right:6px;bottom:42px}.card{padding:10px}.temp{font-size:38px}.metrics{gap:5px}
-    }
-    @media(min-width:801px){.right::-webkit-scrollbar{width:5px}.right::-webkit-scrollbar-thumb{background:#ffffff18;border-radius:99px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>World Radar</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body,#map{height:100%;margin:0}body{background:#06111d;color:#eef7ff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow:hidden}
+#map{position:fixed;inset:0}.ui{position:fixed;z-index:1000;inset:14px 14px auto;pointer-events:none}
+.search{display:flex;gap:8px;background:#091827ee;border:1px solid #294052;border-radius:22px;padding:10px;box-shadow:0 8px 30px #0008;pointer-events:auto}
+.search input{min-width:0;flex:1;background:transparent;border:0;outline:0;color:white;font-size:17px;padding:8px}.btn{border:0;border-radius:15px;background:#122536;color:#fff;min-width:54px;font-size:20px}.btn.primary{background:#49aef1}
+.panel{position:fixed;z-index:1000;left:14px;right:14px;bottom:18px;display:grid;gap:10px;pointer-events:none}.card{background:#081522eF;border:1px solid #294052;border-radius:24px;padding:16px;box-shadow:0 8px 35px #0009;pointer-events:auto}
+.topcard{display:grid;grid-template-columns:1fr 1fr;gap:10px}.temp{font-size:48px;font-weight:800}.muted{color:#a9bac8}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.metric{background:#102232;border-radius:14px;padding:10px}.metric small{display:block;color:#8fa6b8}.metric b{font-size:16px}.storm{border-color:#6a3241}.timeline{display:flex;align-items:center;gap:10px}.timeline input{flex:1}
+.tabs{position:fixed;z-index:1001;left:14px;bottom:190px;display:flex;flex-direction:column;gap:5px;background:#081522eF;padding:8px;border:1px solid #294052;border-radius:20px}.tab{border:0;background:transparent;color:white;font-size:25px;padding:8px}
+.toast{position:fixed;z-index:2000;top:80px;left:50%;transform:translateX(-50%);background:#091827ee;padding:12px 18px;border-radius:14px;opacity:0;transition:.2s}.toast.show{opacity:1}
+.leaflet-control-attribution{background:#081522cc!important;color:#b8c7d2!important}.leaflet-control-attribution a{color:#7dc9ff!important}
+@media(max-width:700px){.topcard{grid-template-columns:1fr}.panel{bottom:12px}.tabs{bottom:220px}.metrics{grid-template-columns:repeat(3,1fr)}.metric{padding:8px}.metric b{font-size:14px}}
+</style>
 </head>
 <body>
 <div id="map"></div>
-
-<header class="top glass">
-  <div class="brand"><b>◉ WORLD RADAR</b><small>GLOBAL WEATHER COCKPIT</small></div>
-  <form class="search" id="searchForm"><input id="query" autocomplete="off" placeholder="Město, země…"><button aria-label="Hledat">⌕</button></form>
-  <button class="iconbtn" id="locate" title="Moje poloha">⌖</button>
-  <button class="iconbtn" id="refresh" title="Obnovit">↻</button>
-  <button class="iconbtn" id="settings" title="Nastavení">⚙</button>
-</header>
-
-<nav class="left glass" aria-label="Vrstvy">
-  <button class="tab active" data-layer="radar" title="Radar">🌧️</button>
-  <button class="tab" data-layer="sat" title="Satelit">🛰️</button>
-  <button class="tab" data-layer="cloud" title="Oblačnost">☁️</button>
-  <button class="tab" data-layer="wind" title="Vítr">💨</button>
-  <button class="tab" data-layer="lightning" title="Blesky">⚡</button>
-  <button class="tab" data-layer="rain" title="Srážky">💧</button>
-</nav>
-
-<aside class="right">
-  <section class="card glass">
-    <div class="muted">TEĎ · <b id="place">Olomouc</b></div>
-    <div class="hero">
-      <div><div class="temp" id="temp">--°</div><div id="description">Načítám…</div></div>
-      <div class="weather-icon" id="weatherIcon">☁️</div>
-    </div>
-    <div class="metrics">
-      <div class="metric">💧 Vlhkost<b id="humidity">--</b></div>
-      <div class="metric">💨 Vítr<b id="wind">--</b></div>
-      <div class="metric">💨 Náraz<b id="gust">--</b></div>
-      <div class="metric">🧭 Směr<b id="direction">--</b></div>
-      <div class="metric">🌧️ Srážky<b id="precip">--</b></div>
-      <div class="metric">👁️ Viditelnost<b id="visibility">--</b></div>
-    </div>
-  </section>
-
-  <section class="card glass storm">
-    <div class="muted">⛈️ STORM ENGINE</div>
-    <div class="storm-score" id="stormScore">N/A</div>
-    <p class="status" id="stormText">Analyzuji dostupné modelové parametry…</p>
-    <div class="metrics">
-      <div class="metric">CAPE<b id="cape">N/A</b></div>
-      <div class="metric">CIN<b id="cin">N/A</b></div>
-      <div class="metric">Blesky<b id="lightningValue">N/A</b></div>
-    </div>
-    <div class="tiny" style="margin-top:8px">Modelový index, nikoliv oficiální výstraha.</div>
-  </section>
-
-  <section class="card glass">
-    <div class="muted">🔮 CO SE STANE</div>
-    <p id="nowcastText">Načítám hodinový vývoj…</p>
-  </section>
-
-  <section class="card glass">
-    <div class="muted">DALŠÍCH 12 HODIN</div>
-    <div class="hours" id="hours"></div>
-  </section>
-
-  <section class="card glass">
-    <div class="muted">MODEL CHECK</div>
-    <div class="tiny" id="modelInfo">ECMWF · Open-Meteo</div>
-  </section>
-</aside>
-
-<section class="timeline glass">
-  <div class="timeline-head"><b>RADAR TIMELINE</b><span id="radarTime">TEĎ</span><button id="play" class="iconbtn" style="height:27px;min-width:35px;padding:0">▶</button></div>
-  <input id="radarSlider" type="range" min="0" max="0" value="0">
-  <div class="tiny" id="radarStatus">Načítám radar…</div>
-</section>
-
-<div class="toast" id="toast"></div>
-
-<div class="modal hidden" id="modal">
-  <div class="modalbox glass">
-    <button class="close" id="closeSettings">×</button>
-    <h2>Nastavení</h2>
-    <div class="row"><span>Průhlednost radaru</span><input id="opacity" type="range" min=".2" max="1" step=".05" value=".72"></div>
-    <div class="row"><span>Rychlost animace</span><select id="speed"><option value="600">Rychlá</option><option value="1100" selected>Normální</option><option value="1800">Pomalá</option></select></div>
-    <div class="row"><span>Automaticky aktualizovat</span><input id="autoRefresh" type="checkbox" checked></div>
-    <p class="tiny">Radar je naměřená historie. Budoucí vývoj v panelu je modelová předpověď.</p>
-  </div>
+<div class="ui"><form id="searchForm" class="search">
+<input id="query" placeholder="Město, země…" autocomplete="off">
+<button class="btn primary" aria-label="Hledat">⌕</button>
+<button type="button" id="locate" class="btn">⊙</button>
+<button type="button" id="refresh" class="btn">↻</button>
+</form></div>
+<div class="tabs">
+<button class="tab active" data-layer="radar">🌧️</button>
+<button class="tab" data-layer="sat">🛰️</button>
+<button class="tab" data-layer="cloud">☁️</button>
+<button class="tab" data-layer="lightning">⚡</button>
+<button class="tab" data-layer="wind">💨</button>
 </div>
-
+<div class="panel">
+<div class="topcard">
+<section class="card">
+<div class="muted">TEĎ · <b id="place">Olomouc</b></div>
+<div><span id="temp" class="temp">--°</span> <span id="weatherIcon">☁️</span></div>
+<div id="description" class="muted">Načítám…</div>
+<div class="metrics">
+<div class="metric"><small>💧 Vlhkost</small><b id="humidity">--</b></div>
+<div class="metric"><small>💨 Vítr</small><b id="wind">--</b></div>
+<div class="metric"><small>💨 Nárazy</small><b id="gust">--</b></div>
+<div class="metric"><small>🧭 Směr</small><b id="direction">--</b></div>
+<div class="metric"><small>🌧️ Srážky</small><b id="precip">--</b></div>
+<div class="metric"><small>👁️ Viditelnost</small><b id="visibility">--</b></div>
+</div>
+</section>
+<section class="card storm">
+<div class="muted">⛈️ BOUŘKOVÝ ENGINE <b id="stormLevel">--</b></div>
+<p id="stormText">Analyzuji CAPE, CIN, blesky a srážkový signál…</p>
+<div class="metrics">
+<div class="metric"><small>Bouřka</small><b id="stormScore">--</b></div>
+<div class="metric"><small>CAPE</small><b id="cape">--</b></div>
+<div class="metric"><small>Blesky</small><b id="lightningValue">--</b></div>
+</div>
+</section>
+</div>
+<section class="card"><div class="timeline"><b>RADAR TIMELINE</b><span id="radarTime" class="muted">--:--</span><button id="play" class="btn">▶</button></div><input id="radarSlider" type="range" min="0" max="0" value="0"><div id="radarStatus" class="muted">Načítám radar…</div></section>
+<section class="card"><div class="muted">🔮 NOWCAST</div><p id="nowcastText">Načítám krátkodobý výhled…</p><small id="modelInfo" class="muted">--</small></section>
+</div>
+<div id="toast" class="toast"></div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $=s=>document.querySelector(s);
 const state={lat:49.5938,lon:17.2509,place:"Olomouc",frames:[],index:0,radar:null,opacity:.72,playing:false,timer:null,speed:1100,auto:true};
 
-const map=L.map("map",{worldCopyJump:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView([state.lat,state.lon],7);
+const map=L.map("map",{worldCopyJump:true,zoomAnimation:true,fadeAnimation:false,markerZoomAnimation:false,zoomSnap:.25,zoomDelta:.5}).setView([state.lat,state.lon],7);
 L.control.zoom({position:"bottomright"}).addTo(map);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap contributors"}).addTo(map);
 const satellite=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,opacity:.86,attribution:"Esri World Imagery"});
@@ -132,133 +78,77 @@ const notify=msg=>{const t=$("#toast");t.textContent=msg;t.classList.add("show")
 
 function radarUrl(path){return `https://tilecache.rainviewer.com${path}/256/{z}/{x}/{y}/2/1_0.png`}
 function renderRadar(){
-  if(!state.frames.length)return;
-  const frame=state.frames[state.index];
-  if(state.radar)map.removeLayer(state.radar);
-  state.radar=L.tileLayer(radarUrl(frame.path),{
-    tileSize:256,minZoom:0,maxNativeZoom:7,maxZoom:19,opacity:state.opacity,
-    updateWhenZooming:false,updateWhenIdle:true,keepBuffer:4,noWrap:false,zIndex:30,
-    attribution:"Weather data by RainViewer"
-  }).addTo(map);
-  $("#radarTime").textContent=new Date(frame.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
+ if(!state.frames.length)return;
+ const frame=state.frames[state.index];
+ if(state.radar)map.removeLayer(state.radar);
+ state.radar=L.tileLayer(radarUrl(frame.path),{
+   tileSize:256,minZoom:0,maxNativeZoom:7,maxZoom:19,opacity:state.opacity,
+   updateWhenZooming:true,updateWhenIdle:true,keepBuffer:8,noWrap:false,zIndex:30,detectRetina:true,
+   attribution:"Weather data by RainViewer"
+ }).addTo(map);
+ $("#radarTime").textContent=new Date(frame.time*1000).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"});
 }
 async function loadRadar(){
-  try{
-    const d=await api("https://api.rainviewer.com/public/weather-maps.json");
-    state.frames=d.radar?.past||[];
-    state.index=Math.max(0,state.frames.length-1);
-    $("#radarSlider").max=Math.max(0,state.frames.length-1);
-    $("#radarSlider").value=state.index;
-    $("#radarStatus").textContent=`${state.frames.length} historických snímků`;
-    renderRadar();
-  }catch(e){$("#radarStatus").textContent="Radar se nepodařilo načíst";notify("Radar není momentálně dostupný")}
+ try{
+   const d=await api("https://api.rainviewer.com/public/weather-maps.json");
+   state.frames=d.radar?.past||[];
+   state.index=Math.max(0,state.frames.length-1);
+   $("#radarSlider").max=Math.max(0,state.frames.length-1);
+   $("#radarSlider").value=state.index;
+   $("#radarStatus").textContent=`${state.frames.length} historických snímků`;
+   renderRadar();
+ }catch(e){$("#radarStatus").textContent="Radar se nepodařilo načíst";notify("Radar není momentálně dostupný")}
 }
+function weatherInfo(code){if(code>=95)return["⛈️","Bouřka"];if(code>=80)return["🌦️","Silné přeháňky"];if(code>=61)return["🌧️","Déšť"];if(code>=51)return["🌦️","Mrholení"];if(code>=45)return["🌫️","Mlha"];if(code>=3)return["☁️","Oblačno"];return["☀️","Jasno"]}
+function windDir(deg){const dirs=["S","SV","V","JV","J","JZ","Z","SZ"];return dirs[Math.round(deg/45)%8]}
+function value(x,unit=""){return x==null||Number.isNaN(Number(x))?"N/A":`${x}${unit}`}
 
-function weatherInfo(code){
-  if(code>=95)return["⛈️","Bouřka"];
-  if(code>=80)return["🌦️","Silné přeháňky"];
-  if(code>=61)return["🌧️","Déšť"];
-  if(code>=51)return["🌦️","Mrholení"];
-  if(code>=45)return["🌫️","Mlha"];
-  if(code>=3)return["☁️","Oblačno"];
-  return["☀️","Jasno"];
-}
-function windDir(deg){
-  const dirs=["S","SV","V","JV","J","JZ","Z","SZ"];
-  return dirs[Math.round(deg/45)%8];
-}
-function stormClass(score){
-  if(score==null)return"";
-  if(score>=65)return"danger";
-  if(score>=35)return"warn";
-  return"good";
-}
 async function loadWeather(){
-  try{
-    const u=`https://api.open-meteo.com/v1/forecast?latitude=${state.lat}&longitude=${state.lon}&current=temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,visibility&hourly=temperature_2m,precipitation_probability,precipitation,rain,weather_code,wind_speed_10m,wind_gusts_10m,cape,convective_inhibition,lightning_density,thunderstorm_probability&forecast_days=2&timezone=auto&models=ecmwf`;
-    const d=await api(u),c=d.current,h=d.hourly;
-    $("#place").textContent=state.place;
-    $("#temp").textContent=Math.round(c.temperature_2m)+"°";
-    const [icon,desc]=weatherInfo(c.weather_code);$("#weatherIcon").textContent=icon;$("#description").textContent=desc;
-    $("#humidity").textContent=Math.round(c.relative_humidity_2m)+"%";
-    $("#wind").textContent=Math.round(c.wind_speed_10m)+" km/h";
-    $("#gust").textContent=Math.round(c.wind_gusts_10m)+" km/h";
-    $("#direction").textContent=`${windDir(c.wind_direction_10m)} ${Math.round(c.wind_direction_10m)}°`;
-    $("#precip").textContent=`${c.precipitation??0} mm`;
-    $("#visibility").textContent=c.visibility==null?"N/A":`${(c.visibility/1000).toFixed(1)} km`;
+ try{
+   const base=`latitude=${state.lat}&longitude=${state.lon}&timezone=auto&forecast_days=2`;
+   const u=`https://api.open-meteo.com/v1/forecast?${base}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m,visibility&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,cape,convective_inhibition,lightning_density,thunderstorm_probability&models=ecmwf`;
+   const d=await api(u),c=d.current,h=d.hourly||{};
+   $("#place").textContent=state.place;
+   $("#temp").textContent=value(Math.round(c.temperature_2m),"°");
+   const [icon,desc]=weatherInfo(c.weather_code);
+   $("#weatherIcon").textContent=icon;$("#description").textContent=desc;
+   $("#humidity").textContent=value(Math.round(c.relative_humidity_2m),"%");
+   $("#wind").textContent=value(Math.round(c.wind_speed_10m)," km/h");
+   $("#gust").textContent=value(Math.round(c.wind_gusts_10m)," km/h");
+   $("#direction").textContent=c.wind_direction_10m==null?"N/A":`${windDir(c.wind_direction_10m)} ${Math.round(c.wind_direction_10m)}°`;
+   $("#precip").textContent=value(c.precipitation," mm");
+   $("#visibility").textContent=c.visibility==null?"N/A":`${(c.visibility/1000).toFixed(1)} km`;
 
-    let html="";
-    for(let i=0;i<12;i++){
-      const p=h.precipitation_probability?.[i]??0;
-      html+=`<div class="hour"><b>${new Date(h.time[i]).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})}</b><strong>${Math.round(h.temperature_2m[i])}°</strong><span>🌧️ ${p}%</span><div class="bar"><i style="width:${Math.min(100,p)}%"></i></div></div>`;
-    }
-    $("#hours").innerHTML=html;
+   const cape=h.cape?.[0],cin=h.convective_inhibition?.[0],ld=h.lightning_density?.[0],tp=h.thunderstorm_probability?.[0];
+   $("#cape").textContent=value(cape==null?null:Math.round(cape)," J/kg");
+   $("#lightningValue").textContent=value(ld==null?null:Number(ld).toFixed(2));
+   $("#stormScore").textContent=value(tp==null?null:Math.round(tp),"%");
+   $("#stormLevel").textContent=tp==null?"NEDOSTUPNÉ":tp>=65?"VYSOKÝ":tp>=35?"STŘEDNÍ":"NÍZKÝ";
+   $("#stormText").textContent=tp==null?`Modelový bouřkový parametr není pro tuto lokalitu dostupný. CAPE ${value(cape," J/kg")} · CIN ${value(cin," J/kg")}.`:`Modelový bouřkový signál ${Math.round(tp)} %. CAPE ${value(cape," J/kg")} · CIN ${value(cin," J/kg")}.`;
 
-    const cape=h.cape?.[0]??null,cin=h.convective_inhibition?.[0]??null,ld=h.lightning_density?.[0]??null,tp=h.thunderstorm_probability?.[0]??null;
-    $("#cape").textContent=cape==null?"N/A":`${Math.round(cape)} J/kg`;
-    $("#cin").textContent=cin==null?"N/A":`${Math.round(cin)} J/kg`;
-    $("#lightningValue").textContent=ld==null?"N/A":Number(ld).toFixed(2);
-    $("#stormScore").className="storm-score "+stormClass(tp);
-    $("#stormScore").textContent=tp==null?"N/A":`${Math.round(tp)}%`;
-    $("#stormText").textContent=tp==null
-      ?"Bouřkové parametry pro tuto lokalitu nejsou dostupné. Index nelze spolehlivě vyhodnotit."
-      :`Modelový bouřkový signál ${Math.round(tp)} %. CAPE ${cape==null?"N/A":Math.round(cape)} J/kg · CIN ${cin==null?"N/A":Math.round(cin)} J/kg.`;
-
-    const p0=h.precipitation_probability?.[0]??0,p3=h.precipitation_probability?.[3]??0;
-    $("#nowcastText").textContent=p0>=70
-      ?`Srážky jsou velmi pravděpodobné už nyní (${p0} %). Sleduj radar pro skutečný pohyb srážek.`
-      :p3>=60
-      ?`Srážky mohou zesílit během několika hodin. Model dává kolem +3 h pravděpodobnost ${p3} %.`
-      :"V nejbližších hodinách není podle modelu výrazný srážkový signál.";
-    $("#modelInfo").textContent=`ECMWF · Open-Meteo · ${new Date(d.current.time).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})} aktualizace`;
-  }catch(e){notify("Počasí se nepodařilo načíst")}
+   const p0=h.precipitation_probability?.[0]??0,p3=h.precipitation_probability?.[3]??0;
+   $("#nowcastText").textContent=p0>=70?`Srážky jsou podle modelu velmi pravděpodobné už nyní (${Math.round(p0)} %). Radar sleduj pro skutečný pohyb srážek.`:p3>=60?`Srážky mohou zesílit během několika hodin. Model dává kolem +3 h pravděpodobnost ${Math.round(p3)} %.`:"V nejbližších hodinách není podle modelu výrazný srážkový signál.";
+   $("#modelInfo").textContent=`ECMWF · Open-Meteo · ${new Date(d.current.time).toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"})} aktualizace`;
+ }catch(e){
+   console.error(e);notify("Počasí se nepodařilo načíst");
+   $("#description").textContent="Data nejsou momentálně dostupná";
+   $("#stormText").textContent="Bouřkový engine čeká na meteorologická data.";
+ }
 }
 
 function setLayer(name){
-  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer===name));
-  if(name==="sat"){
-    if(state.radar)map.removeLayer(state.radar);satellite.addTo(map);notify("Satelitní podklad");
-  }else if(name==="radar"||name==="rain"){
-    if(map.hasLayer(satellite))map.removeLayer(satellite);
-    if(!state.radar)renderRadar();else state.radar.addTo(map);
-    if(name==="rain")notify("Radar + modelová předpověď srážek");
-  }else if(name==="lightning"){
-    notify("⚡ Blesky: modelová hustota, ne přesná detekce jednotlivých úderů");
-  }else if(name==="wind"){
-    notify("💨 Vítr je dostupný v panelu. Plošná větrná mapa vyžaduje samostatný ověřený tile zdroj.");
-  }else if(name==="cloud"){
-    notify("☁️ Oblačnost je dostupná z modelu; satelit ukazuje skutečný obraz oblačnosti.");
-  }
+ document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.layer===name));
+ if(name==="sat"){if(state.radar)map.removeLayer(state.radar);satellite.addTo(map);notify("Satelitní podklad")}
+ else if(name==="radar"){if(map.hasLayer(satellite))map.removeLayer(satellite);if(!state.radar)renderRadar();else state.radar.addTo(map);notify("Radar zapnut")}
+ else notify(name==="lightning"?"⚡ Blesky: modelová hustota":"Vrstva je dostupná v datovém panelu");
 }
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>setLayer(b.dataset.layer)));
-
 $("#radarSlider").addEventListener("input",e=>{state.index=+e.target.value;renderRadar()});
-$("#play").addEventListener("click",()=>{
-  state.playing=!state.playing;$("#play").textContent=state.playing?"Ⅱ":"▶";clearInterval(state.timer);
-  if(state.playing)state.timer=setInterval(()=>{if(!state.frames.length)return;state.index=(state.index+1)%state.frames.length;$("#radarSlider").value=state.index;renderRadar()},state.speed);
-});
+$("#play").addEventListener("click",()=>{state.playing=!state.playing;$("#play").textContent=state.playing?"Ⅱ":"▶";clearInterval(state.timer);if(state.playing)state.timer=setInterval(()=>{if(!state.frames.length)return;state.index=(state.index+1)%state.frames.length;$("#radarSlider").value=state.index;renderRadar()},state.speed)});
 $("#refresh").addEventListener("click",()=>{loadRadar();loadWeather()});
-$("#locate").addEventListener("click",()=>{
-  if(!navigator.geolocation)return notify("GPS není v tomto prohlížeči dostupné");
-  navigator.geolocation.getCurrentPosition(p=>{state.lat=p.coords.latitude;state.lon=p.coords.longitude;state.place="Moje poloha";marker.setLatLng([state.lat,state.lon]);map.setView([state.lat,state.lon],9);loadWeather()},()=>notify("Poloha nebyla povolena"));
-});
-$("#searchForm").addEventListener("submit",async e=>{
-  e.preventDefault();const q=$("#query").value.trim();if(!q)return;
-  try{
-    const a=await api("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q));
-    if(!a[0])return notify("Místo nenalezeno");
-    state.lat=+a[0].lat;state.lon=+a[0].lon;state.place=a[0].display_name.split(",")[0];
-    marker.setLatLng([state.lat,state.lon]);map.setView([state.lat,state.lon],9);loadWeather();
-  }catch(e){notify("Vyhledávání se nepodařilo")}
-});
-$("#settings").addEventListener("click",()=>$("#modal").classList.remove("hidden"));
-$("#closeSettings").addEventListener("click",()=>$("#modal").classList.add("hidden"));
-$("#opacity").addEventListener("input",e=>{state.opacity=+e.target.value;if(state.radar)state.radar.setOpacity(state.opacity)});
-$("#speed").addEventListener("change",e=>state.speed=+e.target.value);
-$("#autoRefresh").addEventListener("change",e=>state.auto=e.target.checked);
-
-loadRadar();loadWeather();
-setInterval(()=>{if(state.auto){loadRadar();loadWeather()}},10*60*1000);
+$("#locate").addEventListener("click",()=>{if(!navigator.geolocation)return notify("GPS není dostupné");navigator.geolocation.getCurrentPosition(p=>{state.lat=p.coords.latitude;state.lon=p.coords.longitude;state.place="Moje poloha";marker.setLatLng([state.lat,state.lon]);map.setView([state.lat,state.lon],9);loadWeather()},()=>notify("Poloha nebyla povolena")});
+$("#searchForm").addEventListener("submit",async e=>{e.preventDefault();const q=$("#query").value.trim();if(!q)return;try{const a=await api("https://nominatim.openstreetmap.org/search?format=json&limit=1&q="+encodeURIComponent(q));if(!a[0])return notify("Místo nenalezeno");state.lat=+a[0].lat;state.lon=+a[0].lon;state.place=a[0].display_name.split(",")[0];marker.setLatLng([state.lat,state.lon]);map.setView([state.lat,state.lon],9);loadWeather()}catch(e){notify("Vyhledávání se nepodařilo")}});
+loadRadar();loadWeather();setInterval(()=>{if(state.auto){loadRadar();loadWeather()}},10*60*1000);
 </script>
 </body>
 </html>
