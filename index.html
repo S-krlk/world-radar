@@ -579,31 +579,38 @@ function toggleCloud(){
 
 /* ---------- Vítr na mapě ---------- */
 const windLayer=L.layerGroup();
+function windMarker(la,lo,sp,dr,mine){
+ const col=sp>50?"#ff5c5c":sp>30?"#ffb347":sp>15?"#ffe066":"#8fe3ff";
+ return L.marker([la,lo],{interactive:false,keyboard:false,zIndexOffset:900,icon:L.divIcon({className:"",iconSize:[44,46],iconAnchor:[22,mine?64:23],
+  html:`<div class="wind"><svg width="34" height="34" viewBox="-17 -17 34 34" style="transform:rotate(${(dr+180)%360}deg)"><path d="M0,-14L8,10L0,6L-8,10Z" fill="${col}" stroke="#000" stroke-width="1.5"/></svg><span style="color:${col};font-size:11px">${Math.round(sp)}</span></div>`})});
+}
 async function drawWind(){
  if(!state.windOn)return;
- const b=map.getBounds(),la=[],lo=[],N=5,M=4;
+ const items=[],c=state.lastWeather?.current;
+ if(c&&c.wind_speed_10m!=null)items.push(windMarker(state.lat,state.lon,c.wind_speed_10m,c.wind_direction_10m,true));
+ windLayer.clearLayers();items.forEach(m=>windLayer.addLayer(m));
+ const b=map.getBounds(),la=[],lo=[],N=4,M=3;
  for(let i=0;i<N;i++)for(let j=0;j<M;j++){
   la.push((b.getSouth()+(b.getNorth()-b.getSouth())*(j+.5)/M).toFixed(2));
   lo.push((b.getWest()+(b.getEast()-b.getWest())*(i+.5)/N).toFixed(2));
  }
  try{
-  const r=await api(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&current=wind_speed_10m,wind_direction_10m`);
-  const arr=Array.isArray(r)?r:[r];
-  windLayer.clearLayers();
+  const r=await api(`https://api.open-meteo.com/v1/forecast?latitude=${la.join(",")}&longitude=${lo.join(",")}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh`);
+  const arr=Array.isArray(r)?r:[r];let n=0;
   arr.forEach((p,k)=>{
-   const sp=p.current?.wind_speed_10m,dr=p.current?.wind_direction_10m;if(sp==null)return;
-   const col=sp>50?"#ff5c5c":sp>30?"#ffb347":sp>15?"#ffe066":"#8fe3ff";
-   windLayer.addLayer(L.marker([la[k],lo[k]],{interactive:false,icon:L.divIcon({className:"",iconSize:[40,44],iconAnchor:[20,22],
-    html:`<div class="wind"><svg width="30" height="30" viewBox="-15 -15 30 30" style="transform:rotate(${(dr+180)%360}deg)"><path d="M0,-12L7,9L0,5L-7,9Z" fill="${col}" stroke="#000" stroke-opacity=".5"/></svg><span style="color:${col}">${Math.round(sp)}</span></div>`})}));
+   const sp=p.current?.wind_speed_10m,dr=p.current?.wind_direction_10m;
+   if(sp==null||dr==null)return;
+   windLayer.addLayer(windMarker(+la[k],+lo[k],sp,dr,false));n++;
   });
- }catch(e){console.warn("Wind:",e);notify("Vítr se nepodařilo načíst")}
+  if(!n)notify("Vítr: server nevrátil žádná data");
+ }catch(e){console.warn("Wind:",e);notify("Vítr v síti se nenačetl ("+e.message+"), ukazuji jen tvoje místo")}
 }
 function toggleWind(){
  state.windOn=!state.windOn;
  if(state.windOn){windLayer.addTo(map);drawWind()}else{map.removeLayer(windLayer)}
  syncTabs();notify(state.windOn?"Vítr v km/h, šipky ukazují směr proudění":"Vítr vypnut");
 }
-map.on("moveend",drawWind);
+let windT;map.on("moveend",()=>{clearTimeout(windT);windT=setTimeout(drawWind,600)});
 
 /* ---------- Upozornění na déšť, pohyb srážek, graf, 7 dní ---------- */
 if(localStorage.getItem("worldRadarNotify")==="1")$("#notif").checked=true;
